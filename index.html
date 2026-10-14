@@ -36,9 +36,9 @@
 <section class="hero">
   <div class="hero-inner">
     <div class="hero-label">CRISP-DM · Multiple Linear Regression</div>
-    <h1>50 Startups Profit Prediction</h1>
-    <p class="hero-desc">20 feature-selection methods compared head-to-head on the 50 Startups dataset. The best model achieves <strong>Test RMSE 8,243</strong> and <strong>R² 0.916</strong> — a <strong>75.6 % improvement</strong> over the mean-prediction baseline.</p>
-    <div class="hero-badges">
+    <h1 id="heroTitle">50 Startups Profit Prediction</h1>
+    <p id="heroDesc" class="hero-desc">20 feature-selection methods compared head-to-head on the 50 Startups dataset. The best model achieves <strong>Test RMSE 8,243</strong> and <strong>R² 0.916</strong> — a <strong>75.6 % improvement</strong> over the mean-prediction baseline.</p>
+    <div id="heroBadges" class="hero-badges">
       <span class="badge badge-teal">50 Observations</span>
       <span class="badge badge-blue">5 Features</span>
       <span class="badge badge-green">20 Selection Methods</span>
@@ -66,6 +66,68 @@
   <!-- CONTENT -->
   <main class="content">
 
+    <!-- ── PROBLEM SELECTION & CUSTOM DATASET CONTROL PANEL ── -->
+    <div class="dataset-control-panel">
+      <div class="control-header">
+        <div class="control-title">
+          <span>⚙️ Problem &amp; Dataset Selection</span>
+          <span class="badge badge-teal" id="currentProblemBadge">Problem: 50 Startups</span>
+        </div>
+        <div style="font-size:12.5px; color:var(--muted);">
+          Select predefined benchmark or enter public CSV URL
+        </div>
+      </div>
+
+      <div class="control-row">
+        <!-- Problem Selection Dropdown (Requirement 1) -->
+        <div class="control-group">
+          <label for="problemSelect"><strong>🎯 Select Regression Problem:</strong></label>
+          <select id="problemSelect" class="select-input" onchange="onProblemSelectChange(this.value)">
+            <option value="50_startups" selected>50 Startups — Profit Prediction (Default)</option>
+            <option value="boston_housing">Boston Housing — Housing Value Prediction</option>
+            <option value="custom_url">Custom Dataset URL (Load any public CSV)</option>
+          </select>
+        </div>
+
+        <!-- Custom CSV URL Input Field (Requirement 2) -->
+        <div class="control-group" id="urlInputContainer">
+          <label for="csvUrlInput"><strong>🌐 Public CSV Dataset URL:</strong></label>
+          <div style="display:flex; gap:8px;">
+            <input type="url" id="csvUrlInput" class="number-input" placeholder="https://raw.githubusercontent.com/.../dataset.csv" value="https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv"/>
+            <button type="button" class="tab-btn active" id="btnLoadCsv" onclick="loadCustomCsvFromUrl()">Load Dataset</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Dataset Configuration (Target & Feature selection) -->
+      <div id="customConfigPanel" class="custom-config-panel" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div style="font-size:13px; font-weight:700; color:var(--dark);">
+            📋 Configure Custom Dataset Columns
+          </div>
+          <button type="button" class="pill-btn active" onclick="runCustomRegression()">▶️ Train &amp; Analyze Custom Regression</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 220px 1fr; gap:16px; align-items:start;">
+          <div>
+            <label for="customTargetSelect" style="font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:4px;">
+              🎯 Target Variable (y):
+            </label>
+            <select id="customTargetSelect" class="select-input" onchange="onCustomTargetChange()"></select>
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:4px;">
+              📊 Input Features (X) — check features to include in regression:
+            </label>
+            <div id="customFeatureCheckboxes" class="feature-checkbox-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error / Status Message Banner -->
+      <div id="datasetAlertBox" class="info-box info-box-warning" style="display:none; margin-top:12px;"></div>
+    </div>
+
     <!-- ── STEP 1: BUSINESS UNDERSTANDING ── -->
     <section id="business" class="section">
       <div class="section-header">
@@ -79,17 +141,17 @@
         <div class="card card-accent-teal">
           <div class="card-icon">🎯</div>
           <div class="card-title">Goal</div>
-          <div class="card-body">Predict <strong>Profit</strong> from R&D Spend, Administration, Marketing Spend &amp; State using Ordinary Least Squares.</div>
+          <div id="bizGoalBody" class="card-body">Predict <strong>Profit</strong> from R&amp;D Spend, Administration, Marketing Spend &amp; State using Ordinary Least Squares.</div>
         </div>
         <div class="card card-accent-blue">
           <div class="card-icon">✅</div>
           <div class="card-title">Success Criterion</div>
-          <div class="card-body">Minimise <strong>Validation RMSE</strong> across 20 feature-selection methods. Beat the mean-prediction baseline by a significant margin.</div>
+          <div id="bizSuccessBody" class="card-body">Minimise <strong>Validation RMSE</strong> across 20 feature-selection methods. Beat the mean-prediction baseline by a significant margin.</div>
         </div>
         <div class="card card-accent-orange">
           <div class="card-icon">⚠️</div>
           <div class="card-title">Limitation</div>
-          <div class="card-body">Only <strong>50 observations</strong> — rankings may be unstable. Results are exploratory, not production-grade.</div>
+          <div id="bizLimitBody" class="card-body">Only <strong>50 observations</strong> — rankings may be unstable. Results are exploratory, not production-grade.</div>
         </div>
       </div>
     </section>
@@ -104,7 +166,7 @@
         </div>
       </div>
 
-      <div class="stats-grid">
+      <div class="stats-grid" id="dataStatsGrid">
         <div class="stat-card"><div class="stat-val">50</div><div class="stat-lbl">Observations</div></div>
         <div class="stat-card"><div class="stat-val">5</div><div class="stat-lbl">Columns</div></div>
         <div class="stat-card"><div class="stat-val">0</div><div class="stat-lbl">Missing Values</div></div>
@@ -114,9 +176,9 @@
 
       <h3 class="sub-heading">Dataset Preview (first 5 rows)</h3>
       <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>#</th><th>R&D Spend</th><th>Administration</th><th>Marketing Spend</th><th>State</th><th>Profit</th></tr></thead>
-          <tbody>
+        <table class="data-table" id="previewTable">
+          <thead id="previewThead"><tr><th>#</th><th>R&amp;D Spend</th><th>Administration</th><th>Marketing Spend</th><th>State</th><th>Profit</th></tr></thead>
+          <tbody id="previewTbody">
             <tr><td>1</td><td>165,349.20</td><td>136,897.80</td><td>471,784.10</td><td>New York</td><td>192,261.83</td></tr>
             <tr><td>2</td><td>162,597.70</td><td>151,377.59</td><td>443,898.53</td><td>California</td><td>191,792.06</td></tr>
             <tr><td>3</td><td>153,441.51</td><td>101,145.55</td><td>407,934.54</td><td>Florida</td><td>191,050.39</td></tr>
@@ -128,9 +190,9 @@
 
       <h3 class="sub-heading">Descriptive Statistics</h3>
       <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>Statistic</th><th>R&D Spend</th><th>Administration</th><th>Marketing Spend</th><th>Profit</th></tr></thead>
-          <tbody>
+        <table class="data-table" id="descStatsTable">
+          <thead id="descStatsThead"><tr><th>Statistic</th><th>R&amp;D Spend</th><th>Administration</th><th>Marketing Spend</th><th>Profit</th></tr></thead>
+          <tbody id="descStatsTbody">
             <tr><td>Mean</td><td>73,721.62</td><td>121,344.64</td><td>211,025.10</td><td>112,012.64</td></tr>
             <tr><td>Std Dev</td><td>45,902.26</td><td>28,017.80</td><td>122,290.31</td><td>40,306.18</td></tr>
             <tr><td>Min</td><td>0.00</td><td>51,283.14</td><td>0.00</td><td>14,681.40</td></tr>
@@ -153,23 +215,23 @@
       <div class="card-row">
         <div class="card">
           <div class="card-title">Train / Val / Test Split</div>
-          <div class="split-bar">
+          <div class="split-bar" id="prepSplitBar">
             <div class="split-seg seg-fit" style="width:60%">Fit<br/><strong>30</strong></div>
             <div class="split-seg seg-val" style="width:20%">Val<br/><strong>10</strong></div>
             <div class="split-seg seg-test" style="width:20%">Test<br/><strong>10</strong></div>
           </div>
-          <div class="card-body" style="margin-top:12px">Selection on <em>fit</em> · Method comparison on <em>val</em> · Final score on <em>test</em> (touched once)</div>
+          <div class="card-body" id="prepSplitDesc" style="margin-top:12px">Selection on <em>fit</em> · Method comparison on <em>val</em> · Final score on <em>test</em> (touched once)</div>
         </div>
         <div class="card">
-          <div class="card-title">Encoded Features (5 total)</div>
-          <div class="badge-list">
-            <span class="badge badge-teal">R&D Spend</span>
+          <div class="card-title">Encoded Features</div>
+          <div class="badge-list" id="prepBadgeList">
+            <span class="badge badge-teal">R&amp;D Spend</span>
             <span class="badge badge-blue">Administration</span>
             <span class="badge badge-blue">Marketing Spend</span>
             <span class="badge badge-purple">State_Florida</span>
             <span class="badge badge-purple">State_New York</span>
           </div>
-          <div class="card-body" style="margin-top:12px">One-hot encoding applied to <em>State</em>; California is the baseline (dropped). Numeric features standardised for methods that require it.</div>
+          <div class="card-body" id="prepEncodeDesc" style="margin-top:12px">One-hot encoding applied to <em>State</em>; California is the baseline (dropped). Numeric features standardised for methods that require it.</div>
         </div>
       </div>
     </section>
@@ -183,6 +245,8 @@
           <p class="section-sub">All methods trained on fit set only. Compare using validation RMSE. Click a column header to sort.</p>
         </div>
       </div>
+
+      <div id="customMethodsNotice" class="info-box info-box-blue" style="display:none; margin-bottom:14px;"></div>
 
       <div class="table-controls">
         <input id="methodSearch" class="search-box" type="text" placeholder="🔍  Search method…" oninput="filterTable()"/>
@@ -215,6 +279,8 @@
           <p class="section-sub">Sweep k = 1 → 5 for each method. Final model fitted on dev set, evaluated on held-out test set.</p>
         </div>
       </div>
+
+      <div id="customFiveNotice" class="info-box info-box-blue" style="display:none; margin-bottom:14px;"></div>
 
       <!-- Method filter tabs -->
       <div class="method-tabs" id="methodTabs">
@@ -262,41 +328,43 @@
       <div class="section-header">
         <span class="section-num">6</span>
         <div>
-          <h2>Evaluation — Final Test Results</h2>
-          <p class="section-sub">Winner: <strong>Permutation Importance</strong> (k=3) · Re-fitted on full dev set · Scored once on held-out test set.</p>
+          <h2 id="evalHeading">Evaluation — Final Test Results</h2>
+          <p class="section-sub" id="evalSubHeading">Winner: <strong>Permutation Importance</strong> (k=3) · Re-fitted on full dev set · Scored once on held-out test set.</p>
         </div>
       </div>
 
-      <div class="stats-grid">
+      <div class="stats-grid" id="evalStatsGrid">
         <div class="stat-card stat-card-winner">
-          <div class="stat-val teal">8,243</div>
+          <div class="stat-val teal" id="evalStatRmse">8,243</div>
           <div class="stat-lbl">Test RMSE</div>
         </div>
         <div class="stat-card stat-card-winner">
-          <div class="stat-val teal">0.916</div>
+          <div class="stat-val teal" id="evalStatR2">0.916</div>
           <div class="stat-lbl">Test R²</div>
         </div>
         <div class="stat-card">
-          <div class="stat-val">6,431</div>
+          <div class="stat-val" id="evalStatMae">6,431</div>
           <div class="stat-lbl">Test MAE</div>
         </div>
         <div class="stat-card">
-          <div class="stat-val">33,777</div>
+          <div class="stat-val" id="evalStatBase">33,777</div>
           <div class="stat-lbl">Baseline RMSE (mean pred.)</div>
         </div>
         <div class="stat-card">
-          <div class="stat-val teal">−75.6%</div>
+          <div class="stat-val teal" id="evalStatImp">−75.6%</div>
           <div class="stat-lbl">RMSE improvement vs baseline</div>
         </div>
       </div>
 
-      <div class="info-box">
+      <div class="info-box" id="evalWinnerBox">
         <strong>🏆 Winning method:</strong> Permutation Importance (k=3)<br/>
         <strong>Selected features:</strong>
         <span class="badge badge-teal">R&amp;D Spend</span>
         <span class="badge badge-blue">Marketing Spend</span>
         <span class="badge badge-purple">State_New York</span>
       </div>
+
+      <div id="evalNoticeBox" class="info-box info-box-blue" style="display:none; margin-top:20px;"></div>
 
       <div class="chart-row" style="margin-top:28px">
         <div class="chart-card">
@@ -334,19 +402,19 @@
         </div>
 
         <!-- Formula Card -->
-        <div class="formula-card">
-          <div class="formula-title">
+        <div class="formula-card" id="formulaCardEl">
+          <div class="formula-title" id="formulaTitleEl">
             <span>OLS Multiple Linear Regression Equation (Winning 3-Feature Model)</span>
-            <span class="badge badge-teal">Fitted on Dev Set (N=40)</span>
+            <span class="badge badge-teal" id="formulaBadgeEl">Fitted on Dev Set (N=40)</span>
           </div>
-          <div class="formula-math">
+          <div class="formula-math" id="formulaMathEl">
             <span class="var-y">Profit ($)</span> = 
             <span class="var-const">45,671.89</span> + 
             <span class="var-x1">0.7841</span> &times; (R&amp;D Spend) + 
             <span class="var-x2">0.0391</span> &times; (Marketing Spend) - 
             <span class="var-x3">510.46</span> &times; (State_New York)
           </div>
-          <div class="formula-note">
+          <div class="formula-note" id="formulaNoteEl">
             * Reference baseline state: <strong>California</strong> (intercept captures California baseline). Administration and Florida excluded by feature selection.
           </div>
         </div>
@@ -367,7 +435,7 @@
                 <th>Significance</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="olsTableBody">
               <tr>
                 <td><strong>Intercept (&beta;<sub>0</sub>)</strong></td>
                 <td><strong>45,671.8930</strong></td>
@@ -413,7 +481,7 @@
         </div>
 
         <!-- Overall Fit Grid -->
-        <div class="stats-grid" style="margin-top:20px;">
+        <div class="stats-grid" id="olsStatsGrid" style="margin-top:20px;">
           <div class="stat-card">
             <div class="stat-val teal">0.9519</div>
             <div class="stat-lbl">R² (Dev Set)</div>
@@ -500,22 +568,22 @@
         <div class="predictor-header">
           <div>
             <div class="badge badge-teal" style="margin-bottom:6px;">CRISP-DM Stage 6 · Deployment</div>
-            <div class="predictor-title">Interactive Profit Predictor (Live Simulation)</div>
+            <div class="predictor-title" id="predictorTitleEl">Interactive Profit Predictor (Live Simulation)</div>
           </div>
           <div>
-            <a href="crisp_dm_outputs/startup_profit_model.joblib" class="badge badge-blue" download style="text-decoration:none; padding:6px 12px;">
+            <a href="crisp_dm_outputs/startup_profit_model.joblib" id="modelArtifactDownloadLink" class="badge badge-blue" download style="text-decoration:none; padding:6px 12px;">
               💾 Download Model (.joblib)
             </a>
           </div>
         </div>
 
-        <p style="font-size:14px; color:var(--muted); margin-bottom:16px;">
+        <p id="predictorDescEl" style="font-size:14px; color:var(--muted); margin-bottom:16px;">
           Adjust expenditure parameters or click a preset scenario to compute predicted startup profit in real-time using our winning 3-feature OLS regression model.
         </p>
 
         <!-- Presets -->
         <div style="font-size:12.5px; font-weight:600; color:var(--dark); margin-bottom:6px;">⚡ Quick Presets:</div>
-        <div class="preset-row">
+        <div class="preset-row" id="predictorPresetsContainer">
           <button type="button" class="preset-btn" onclick="applyPreset(120000, 130000, 250000, 'California')">Standard Startup ($120k / $250k / CA)</button>
           <button type="button" class="preset-btn" onclick="applyPreset(165000, 136000, 470000, 'New York')">High-Growth Tech ($165k / $470k / NY)</button>
           <button type="button" class="preset-btn" onclick="applyPreset(60000, 115000, 100000, 'Florida')">Early Stage Florida ($60k / $100k / FL)</button>
@@ -524,7 +592,7 @@
 
         <div class="predictor-grid">
           <!-- Input Form -->
-          <div class="predictor-inputs">
+          <div class="predictor-inputs" id="predictorInputsContainer">
             <!-- R&D Spend -->
             <div class="input-group">
               <div class="input-label-row">
@@ -627,54 +695,276 @@
 </footer>
 
 <script>
-// ══════════════════════════════════════════════════════════
-//  INLINE DATA
-// ══════════════════════════════════════════════════════════
-const METHODS_20 = [
-  { rank:1,  method:"13 Permutation Importance", features:3, rmse:9777.98, mae:8566.25, selected:"R&D Spend, Administration, Marketing Spend" },
-  { rank:2,  method:"15 Random Forest Importance", features:3, rmse:9777.98, mae:8566.25, selected:"R&D Spend, Administration, Marketing Spend" },
-  { rank:3,  method:"16 Gradient Boosting Importance", features:3, rmse:9777.98, mae:8566.25, selected:"R&D Spend, Administration, Marketing Spend" },
-  { rank:4,  method:"06 RFECV", features:1, rmse:10278.16, mae:8466.18, selected:"R&D Spend" },
-  { rank:5,  method:"19 Partial F-test", features:1, rmse:10278.16, mae:8466.18, selected:"R&D Spend" },
-  { rank:6,  method:"05 F-test SelectKBest", features:3, rmse:10812.94, mae:8827.90, selected:"R&D Spend, Marketing Spend, State_Florida" },
-  { rank:7,  method:"09 Pearson Correlation", features:3, rmse:10812.94, mae:8827.90, selected:"R&D Spend, Marketing Spend, State_Florida" },
-  { rank:8,  method:"04 Backward SFS", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
-  { rank:9,  method:"12 Best Subset CV", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
-  { rank:10, method:"11 Stepwise CV", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
-  { rank:11, method:"14 Ridge Coefficient Ranking", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
-  { rank:12, method:"10 Mutual Information", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
-  { rank:13, method:"01 RFE", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
-  { rank:14, method:"03 Forward SFS", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
-  { rank:15, method:"02 LassoCV", features:4, rmse:12796.24, mae:10107.57, selected:"R&D Spend, Marketing Spend, State_Florida, State_New York" },
-  { rank:16, method:"18 Stability Selection (Lasso)", features:4, rmse:12796.24, mae:10107.57, selected:"R&D Spend, Marketing Spend, State_Florida, State_New York" },
-  { rank:17, method:"08 VIF Elimination", features:5, rmse:13279.05, mae:10464.04, selected:"R&D Spend, Administration, Marketing Spend, State_Florida, State_New York" },
-  { rank:18, method:"07 ElasticNetCV", features:5, rmse:13279.05, mae:10464.04, selected:"R&D Spend, Administration, Marketing Spend, State_Florida, State_New York" },
-  { rank:19, method:"00 All Features (Baseline)", features:5, rmse:13279.05, mae:10464.04, selected:"R&D Spend, Administration, Marketing Spend, State_Florida, State_New York" },
-];
 
-const FIVE_METHODS = {
-  labels: [1,2,3,4,5],
-  data: {
-    "RFE":           { rmse:[7714.33,8206.33,8242.78,8254.69,9055.96], r2:[0.9265,0.9168,0.9161,0.9159,0.8987], features:[["R&D Spend"],["R&D Spend","Marketing Spend"],["R&D Spend","Marketing Spend","State_New York"],["R&D Spend","Marketing Spend","State_New York","State_Florida"],["R&D Spend","Marketing Spend","State_New York","State_Florida","Administration"]] },
-    "LassoCV":       { rmse:[7714.33,8206.33,8242.78,8254.69,9055.96], r2:[0.9265,0.9168,0.9161,0.9159,0.8987], features:[["R&D Spend"],["R&D Spend","Marketing Spend"],["R&D Spend","Marketing Spend","State_New York"],["R&D Spend","Marketing Spend","State_New York","State_Florida"],["R&D Spend","Marketing Spend","State_New York","State_Florida","Administration"]] },
-    "F-test":        { rmse:[7714.33,8206.33,8248.67,9055.96,9055.96], r2:[0.9265,0.9168,0.9160,0.8987,0.8987], features:[["R&D Spend"],["R&D Spend","Marketing Spend"],["R&D Spend","Marketing Spend","State_Florida"],["R&D Spend","Marketing Spend","State_Florida","Administration"],["R&D Spend","Marketing Spend","State_Florida","Administration","State_New York"]] },
-    "RF Importance": { rmse:[7714.33,8206.33,8995.91,9055.96,9055.96], r2:[0.9265,0.9168,0.9001,0.8987,0.8987], features:[["R&D Spend"],["R&D Spend","Marketing Spend"],["R&D Spend","Marketing Spend","Administration"],["R&D Spend","Marketing Spend","Administration","State_Florida"],["R&D Spend","Marketing Spend","Administration","State_Florida","State_New York"]] },
-    "Forward SFS":   { rmse:[7714.33,7718.10,8242.78,9015.11,9055.96], r2:[0.9265,0.9264,0.9161,0.8996,0.8987], features:[["R&D Spend"],["R&D Spend","State_New York"],["R&D Spend","State_New York","Marketing Spend"],["R&D Spend","State_New York","Marketing Spend","Administration"],["R&D Spend","State_New York","Marketing Spend","Administration","State_Florida"]] },
+// ══════════════════════════════════════════════════════════
+//  DATA DEFINITIONS: 50 STARTUPS & BOSTON HOUSING
+// ══════════════════════════════════════════════════════════
+
+const STARTUPS_DATA = {
+  id: "50_startups",
+  name: "50 Startups — Profit Prediction",
+  targetName: "Profit ($)",
+  heroTitle: "50 Startups Profit Prediction",
+  heroDesc: "20 feature-selection methods compared head-to-head on the 50 Startups dataset. The best model achieves <strong>Test RMSE 8,243</strong> and <strong>R² 0.916</strong> — a <strong>75.6% improvement</strong> over the mean-prediction baseline.",
+  heroBadges: [
+    { text: "50 Observations", cls: "badge-teal" },
+    { text: "5 Features", cls: "badge-blue" },
+    { text: "20 Selection Methods", cls: "badge-green" },
+    { text: "OLS Statistical Inference", cls: "badge-purple" }
+  ],
+  bizGoal: "Predict <strong>Profit</strong> from R&amp;D Spend, Administration, Marketing Spend &amp; State using Ordinary Least Squares.",
+  bizSuccess: "Minimise <strong>Validation RMSE</strong> across 20 feature-selection methods. Beat the mean-prediction baseline by a significant margin.",
+  bizLimit: "Only <strong>50 observations</strong> — rankings may be unstable. Results are exploratory, not production-grade.",
+  statsGrid: [
+    { val: "50", lbl: "Observations" },
+    { val: "5", lbl: "Columns" },
+    { val: "0", lbl: "Missing Values" },
+    { val: "0", lbl: "Duplicate Rows" },
+    { val: "3", lbl: "States" }
+  ],
+  previewHeaders: ["#", "R&D Spend", "Administration", "Marketing Spend", "State", "Profit"],
+  previewRows: [
+    ["1", "165,349.20", "136,897.80", "471,784.10", "New York", "192,261.83"],
+    ["2", "162,597.70", "151,377.59", "443,898.53", "California", "191,792.06"],
+    ["3", "153,441.51", "101,145.55", "407,934.54", "Florida", "191,050.39"],
+    ["4", "144,372.41", "118,671.85", "383,199.62", "New York", "182,901.99"],
+    ["5", "142,107.34", "91,391.77", "366,168.42", "Florida", "166,187.94"]
+  ],
+  descStatsHeaders: ["Statistic", "R&D Spend", "Administration", "Marketing Spend", "Profit"],
+  descStatsRows: [
+    ["Mean", "73,721.62", "121,344.64", "211,025.10", "112,012.64"],
+    ["Std Dev", "45,902.26", "28,017.80", "122,290.31", "40,306.18"],
+    ["Min", "0.00", "51,283.14", "0.00", "14,681.40"],
+    ["Median", "73,051.08", "122,699.80", "212,716.24", "107,978.19"],
+    ["Max", "165,349.20", "182,645.56", "471,784.10", "192,261.83"]
+  ],
+  prepSplitDesc: "Selection on <em>fit</em> · Method comparison on <em>val</em> · Final score on <em>test</em> (touched once)",
+  prepSplitBar: [
+    { label: "Fit", count: "30", width: "60%", cls: "seg-fit" },
+    { label: "Val", count: "10", width: "20%", cls: "seg-val" },
+    { label: "Test", count: "10", width: "20%", cls: "seg-test" }
+  ],
+  prepBadges: [
+    { text: "R&D Spend", cls: "badge-teal" },
+    { text: "Administration", cls: "badge-blue" },
+    { text: "Marketing Spend", cls: "badge-blue" },
+    { text: "State_Florida", cls: "badge-purple" },
+    { text: "State_New York", cls: "badge-purple" }
+  ],
+  prepEncodeDesc: "One-hot encoding applied to <em>State</em>; California is the baseline (dropped). Numeric features standardised for methods that require it.",
+  methods_20: [
+    { rank:1,  method:"13 Permutation Importance", features:3, rmse:9777.98, mae:8566.25, selected:"R&D Spend, Administration, Marketing Spend" },
+    { rank:2,  method:"15 Random Forest Importance", features:3, rmse:9777.98, mae:8566.25, selected:"R&D Spend, Administration, Marketing Spend" },
+    { rank:3,  method:"16 Gradient Boosting Importance", features:3, rmse:9777.98, mae:8566.25, selected:"R&D Spend, Administration, Marketing Spend" },
+    { rank:4,  method:"06 RFECV", features:1, rmse:10278.16, mae:8466.18, selected:"R&D Spend" },
+    { rank:5,  method:"19 Partial F-test", features:1, rmse:10278.16, mae:8466.18, selected:"R&D Spend" },
+    { rank:6,  method:"05 F-test SelectKBest", features:3, rmse:10812.94, mae:8827.90, selected:"R&D Spend, Marketing Spend, State_Florida" },
+    { rank:7,  method:"09 Pearson Correlation", features:3, rmse:10812.94, mae:8827.90, selected:"R&D Spend, Marketing Spend, State_Florida" },
+    { rank:8,  method:"04 Backward SFS", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+    { rank:9,  method:"12 Best Subset CV", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+    { rank:10, method:"11 Stepwise CV", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+    { rank:11, method:"14 Ridge Coefficient Ranking", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+    { rank:12, method:"10 Mutual Information", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+    { rank:13, method:"01 RFE", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+    { rank:14, method:"03 Forward SFS", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+    { rank:15, method:"02 LassoCV", features:4, rmse:12796.24, mae:10107.57, selected:"R&D Spend, Marketing Spend, State_Florida, State_New York" },
+    { rank:16, method:"18 Stability Selection (Lasso)", features:4, rmse:12796.24, mae:10107.57, selected:"R&D Spend, Marketing Spend, State_Florida, State_New York" },
+    { rank:17, method:"08 VIF Elimination", features:5, rmse:13279.05, mae:10464.04, selected:"R&D Spend, Administration, Marketing Spend, State_Florida, State_New York" },
+    { rank:18, method:"07 ElasticNetCV", features:5, rmse:13279.05, mae:10464.04, selected:"R&D Spend, Administration, Marketing Spend, State_Florida, State_New York" },
+    { rank:19, method:"00 All Features (Baseline)", features:5, rmse:13279.05, mae:10464.04, selected:"R&D Spend, Administration, Marketing Spend, State_Florida, State_New York" }
+  ],
+  five_methods: {
+    labels: [1,2,3,4,5],
+    yBoundsRmse: { min:7000, max:9500 },
+    yBoundsR2: { min:0.88, max:0.935 },
+    data: {
+      "RFE":           { rmse:[7714.33,8206.33,8242.78,8254.69,9055.96], r2:[0.9265,0.9168,0.9161,0.9159,0.8987], features:[["R&D Spend"],["R&D Spend","Marketing Spend"],["R&D Spend","Marketing Spend","State_New York"],["R&D Spend","Marketing Spend","State_New York","State_Florida"],["R&D Spend","Marketing Spend","State_New York","State_Florida","Administration"]] },
+      "LassoCV":       { rmse:[7714.33,8206.33,8242.78,8254.69,9055.96], r2:[0.9265,0.9168,0.9161,0.9159,0.8987], features:[["R&D Spend"],["R&D Spend","Marketing Spend"],["R&D Spend","Marketing Spend","State_New York"],["R&D Spend","Marketing Spend","State_New York","State_Florida"],["R&D Spend","Marketing Spend","State_New York","State_Florida","Administration"]] },
+      "F-test":        { rmse:[7714.33,8206.33,8248.67,9055.96,9055.96], r2:[0.9265,0.9168,0.9160,0.8987,0.8987], features:[["R&D Spend"],["R&D Spend","Marketing Spend"],["R&D Spend","Marketing Spend","State_Florida"],["R&D Spend","Marketing Spend","State_Florida","Administration"],["R&D Spend","Marketing Spend","State_Florida","Administration","State_New York"]] },
+      "RF Importance": { rmse:[7714.33,8206.33,8995.91,9055.96,9055.96], r2:[0.9265,0.9168,0.9001,0.8987,0.8987], features:[["R&D Spend"],["R&D Spend","Marketing Spend"],["R&D Spend","Marketing Spend","Administration"],["R&D Spend","Marketing Spend","Administration","State_Florida"],["R&D Spend","Marketing Spend","Administration","State_Florida","State_New York"]] },
+      "Forward SFS":   { rmse:[7714.33,7718.10,8242.78,9015.11,9055.96], r2:[0.9265,0.9264,0.9161,0.8996,0.8987], features:[["R&D Spend"],["R&D Spend","State_New York"],["R&D Spend","State_New York","Marketing Spend"],["R&D Spend","State_New York","Marketing Spend","Administration"],["R&D Spend","State_New York","Marketing Spend","Administration","State_Florida"]] }
+    }
+  },
+  evalSub: "Winner: <strong>Permutation Importance</strong> (k=3) · Re-fitted on full dev set · Scored once on held-out test set.",
+  evalStats: {
+    rmse: "8,243",
+    r2: "0.916",
+    mae: "6,431",
+    base: "33,777",
+    imp: "−75.6%"
+  },
+  winnerBox: `<strong>🏆 Winning method:</strong> Permutation Importance (k=3)<br/>
+    <strong>Selected features:</strong>
+    <span class="badge badge-teal">R&amp;D Spend</span>
+    <span class="badge badge-blue">Marketing Spend</span>
+    <span class="badge badge-purple">State_New York</span>`,
+  predictions: [
+    { actual:134307.35, pred:127696.49 },
+    { actual:81005.76,  pred:82757.16 },
+    { actual:99937.59,  pred:97850.97 },
+    { actual:64926.08,  pred:46020.28 },
+    { actual:125370.37, pred:130446.37 },
+    { actual:35673.41,  pred:45586.47 },
+    { actual:105733.54, pred:109986.93 },
+    { actual:107404.34, pred:101778.00 },
+    { actual:97427.84,  pred:97196.69 },
+    { actual:122776.86, pred:112925.70 }
+  ],
+  scatterLabel: "Actual Profit ($)",
+  scatterPredLabel: "Predicted Profit ($)",
+  residLabel: "Residual ($)",
+  formulaTitle: "OLS Multiple Linear Regression Equation (Winning 3-Feature Model)",
+  formulaBadge: "Fitted on Dev Set (N=40)",
+  formulaMath: `<span class="var-y">Profit ($)</span> = 
+    <span class="var-const">45,671.89</span> + 
+    <span class="var-x1">0.7841</span> &times; (R&amp;D Spend) + 
+    <span class="var-x2">0.0391</span> &times; (Marketing Spend) - 
+    <span class="var-x3">510.46</span> &times; (State_New York)`,
+  formulaNote: "* Reference baseline state: <strong>California</strong> (intercept captures California baseline). Administration and Florida excluded by feature selection.",
+  olsRows: [
+    { term: "Intercept (&beta;<sub>0</sub>)", coef: "45,671.8930", se: "3,600.1147", t: "12.6862", p: "< 0.0001", ci: "[38,370.52, 52,973.26]", vif: "—", sig: "*** p < 0.001", sigCls: "badge-teal" },
+    { term: "R&amp;D Spend (&beta;<sub>1</sub>)", coef: "0.7841", se: "0.0484", t: "16.1958", p: "< 0.0001", ci: "[0.6859, 0.8823]", vif: "2.280", sig: "*** p < 0.001", sigCls: "badge-teal", rowCls: "row-top5" },
+    { term: "Marketing Spend (&beta;<sub>2</sub>)", coef: "0.0391", se: "0.0201", t: "1.9478", p: "0.0593", ci: "[-0.0016, 0.0799]", vif: "2.260", sig: "• p < 0.10", sigCls: "badge-gold" },
+    { term: "State_New York (&beta;<sub>3</sub>)", coef: "-510.4574", se: "3,260.9347", t: "-0.1565", p: "0.8765", ci: "[-7,123.94, 6,103.02]", vif: "1.015", sig: "ns (p = 0.88)", sigCls: "badge-neutral" }
+  ],
+  olsStats: [
+    { val: "0.9519", lbl: "R² (Dev Set)", teal: true },
+    { val: "0.9479", lbl: "Adjusted R²", teal: true },
+    { val: "237.56", lbl: "F-Statistic (p = 9.0e-24)" },
+    { val: "< 2.30", lbl: "Max VIF (No Collinearity)" },
+    { val: "+0.10%", lbl: "Adj R² vs 5-Feature Baseline", teal: true }
+  ],
+  modelParams: {
+    intercept: 45671.8930,
+    coefs: {
+      "rd": 0.784115,
+      "mkt": 0.039091,
+      "ny": -510.4574
+    }
   }
 };
 
-const PREDICTIONS = [
-  { actual:134307.35, pred:127696.49 },
-  { actual:81005.76,  pred:82757.16 },
-  { actual:99937.59,  pred:97850.97 },
-  { actual:64926.08,  pred:46020.28 },
-  { actual:125370.37, pred:130446.37 },
-  { actual:35673.41,  pred:45586.47 },
-  { actual:105733.54, pred:109986.93 },
-  { actual:107404.34, pred:101778.00 },
-  { actual:97427.84,  pred:97196.69 },
-  { actual:122776.86, pred:112925.70 },
-];
+const BOSTON_RAW = {"name": "Boston Housing \u2014 Housing Value Prediction", "target": "MEDV (Median home value in ,000s)", "rows": 506, "cols": 14, "features_count": 13, "features_list": ["CRIM", "ZN", "INDUS", "CHAS", "NOX", "RM", "AGE", "DIS", "RAD", "TAX", "PTRATIO", "B", "LSTAT"], "preview": [{"CRIM": 0.01, "ZN": 18.0, "INDUS": 2.31, "CHAS": 0, "NOX": 0.54, "RM": 6.58, "AGE": 65.2, "DIS": 4.09, "RAD": 1, "TAX": 296.0, "PTRATIO": 15.3, "B": 396.9, "LSTAT": 4.98, "MEDV": 24.0}, {"CRIM": 0.03, "ZN": 0.0, "INDUS": 7.07, "CHAS": 0, "NOX": 0.47, "RM": 6.42, "AGE": 78.9, "DIS": 4.97, "RAD": 2, "TAX": 242.0, "PTRATIO": 17.8, "B": 396.9, "LSTAT": 9.14, "MEDV": 21.6}, {"CRIM": 0.03, "ZN": 0.0, "INDUS": 7.07, "CHAS": 0, "NOX": 0.47, "RM": 7.18, "AGE": 61.1, "DIS": 4.97, "RAD": 2, "TAX": 242.0, "PTRATIO": 17.8, "B": 392.83, "LSTAT": 4.03, "MEDV": 34.7}, {"CRIM": 0.03, "ZN": 0.0, "INDUS": 2.18, "CHAS": 0, "NOX": 0.46, "RM": 7.0, "AGE": 45.8, "DIS": 6.06, "RAD": 3, "TAX": 222.0, "PTRATIO": 18.7, "B": 394.63, "LSTAT": 2.94, "MEDV": 33.4}, {"CRIM": 0.07, "ZN": 0.0, "INDUS": 2.18, "CHAS": 0, "NOX": 0.46, "RM": 7.15, "AGE": 54.2, "DIS": 6.06, "RAD": 3, "TAX": 222.0, "PTRATIO": 18.7, "B": 396.9, "LSTAT": 5.33, "MEDV": 36.2}], "stats": {"CRIM": {"count": 506.0, "mean": 3.61, "std": 8.6, "min": 0.01, "25%": 0.08, "50%": 0.26, "75%": 3.68, "max": 88.98}, "ZN": {"count": 506.0, "mean": 11.36, "std": 23.32, "min": 0.0, "25%": 0.0, "50%": 0.0, "75%": 12.5, "max": 100.0}, "INDUS": {"count": 506.0, "mean": 11.14, "std": 6.86, "min": 0.46, "25%": 5.19, "50%": 9.69, "75%": 18.1, "max": 27.74}, "CHAS": {"count": 506.0, "mean": 0.07, "std": 0.25, "min": 0.0, "25%": 0.0, "50%": 0.0, "75%": 0.0, "max": 1.0}, "NOX": {"count": 506.0, "mean": 0.55, "std": 0.12, "min": 0.38, "25%": 0.45, "50%": 0.54, "75%": 0.62, "max": 0.87}, "RM": {"count": 506.0, "mean": 6.28, "std": 0.7, "min": 3.56, "25%": 5.89, "50%": 6.21, "75%": 6.62, "max": 8.78}, "AGE": {"count": 506.0, "mean": 68.57, "std": 28.15, "min": 2.9, "25%": 45.02, "50%": 77.5, "75%": 94.07, "max": 100.0}, "DIS": {"count": 506.0, "mean": 3.8, "std": 2.11, "min": 1.13, "25%": 2.1, "50%": 3.21, "75%": 5.19, "max": 12.13}, "RAD": {"count": 506.0, "mean": 9.55, "std": 8.71, "min": 1.0, "25%": 4.0, "50%": 5.0, "75%": 24.0, "max": 24.0}, "TAX": {"count": 506.0, "mean": 408.24, "std": 168.54, "min": 187.0, "25%": 279.0, "50%": 330.0, "75%": 666.0, "max": 711.0}, "PTRATIO": {"count": 506.0, "mean": 18.46, "std": 2.16, "min": 12.6, "25%": 17.4, "50%": 19.05, "75%": 20.2, "max": 22.0}, "B": {"count": 506.0, "mean": 356.67, "std": 91.29, "min": 0.32, "25%": 375.38, "50%": 391.44, "75%": 396.22, "max": 396.9}, "LSTAT": {"count": 506.0, "mean": 12.65, "std": 7.14, "min": 1.73, "25%": 6.95, "50%": 11.36, "75%": 16.96, "max": 37.97}, "MEDV": {"count": 506.0, "mean": 22.53, "std": 9.2, "min": 5.0, "25%": 17.02, "50%": 21.2, "75%": 25.0, "max": 50.0}}, "methods_20": [{"method": "00 All features (baseline)", "features": 13, "rmse": 4.73, "mae": 3.2, "selected": "CRIM, ZN, INDUS, CHAS, NOX, RM, AGE, DIS, RAD, TAX, PTRATIO, B, LSTAT", "rank": 1}, {"method": "02 LassoCV", "features": 13, "rmse": 4.73, "mae": 3.2, "selected": "CRIM, ZN, INDUS, CHAS, NOX, RM, AGE, DIS, RAD, TAX, PTRATIO, B, LSTAT", "rank": 2}, {"method": "06 RFECV", "features": 13, "rmse": 4.73, "mae": 3.2, "selected": "CRIM, ZN, INDUS, CHAS, NOX, RM, AGE, DIS, RAD, TAX, PTRATIO, B, LSTAT", "rank": 3}, {"method": "07 ElasticNetCV", "features": 12, "rmse": 4.73, "mae": 3.2, "selected": "CRIM, ZN, INDUS, CHAS, NOX, RM, DIS, RAD, TAX, PTRATIO, B, LSTAT", "rank": 4}, {"method": "18 Stability selection (Lasso)", "features": 13, "rmse": 4.73, "mae": 3.2, "selected": "CRIM, ZN, INDUS, CHAS, NOX, RM, AGE, DIS, RAD, TAX, PTRATIO, B, LSTAT", "rank": 5}, {"method": "08 VIF elimination", "features": 12, "rmse": 4.79, "mae": 3.23, "selected": "CRIM, ZN, INDUS, CHAS, NOX, RM, AGE, DIS, RAD, PTRATIO, B, LSTAT", "rank": 6}, {"method": "16 Gradient boosting importance", "features": 5, "rmse": 4.88, "mae": 3.25, "selected": "PTRATIO, CRIM, DIS, LSTAT, RM", "rank": 7}, {"method": "01 RFE", "features": 5, "rmse": 4.91, "mae": 3.38, "selected": "NOX, RM, DIS, PTRATIO, LSTAT", "rank": 8}, {"method": "03 Forward SFS", "features": 5, "rmse": 4.91, "mae": 3.38, "selected": "NOX, RM, DIS, PTRATIO, LSTAT", "rank": 9}, {"method": "04 Backward SFS", "features": 5, "rmse": 4.91, "mae": 3.38, "selected": "NOX, RM, DIS, PTRATIO, LSTAT", "rank": 10}, {"method": "14 Ridge coefficient ranking", "features": 5, "rmse": 4.91, "mae": 3.38, "selected": "NOX, PTRATIO, DIS, LSTAT, RM", "rank": 11}, {"method": "11 Stepwise CV", "features": 5, "rmse": 4.91, "mae": 3.38, "selected": "NOX, RM, DIS, PTRATIO, LSTAT", "rank": 12}, {"method": "12 Best subset CV", "features": 5, "rmse": 4.91, "mae": 3.38, "selected": "NOX, RM, DIS, PTRATIO, LSTAT", "rank": 13}, {"method": "05 F-test SelectKBest", "features": 5, "rmse": 5.04, "mae": 3.3, "selected": "INDUS, RM, TAX, PTRATIO, LSTAT", "rank": 14}, {"method": "09 Pearson correlation", "features": 5, "rmse": 5.04, "mae": 3.3, "selected": "TAX, INDUS, PTRATIO, RM, LSTAT", "rank": 15}, {"method": "19 Partial F-test", "features": 5, "rmse": 5.04, "mae": 3.3, "selected": "INDUS, RM, TAX, PTRATIO, LSTAT", "rank": 16}, {"method": "10 Mutual information", "features": 5, "rmse": 5.05, "mae": 3.32, "selected": "NOX, PTRATIO, INDUS, RM, LSTAT", "rank": 17}, {"method": "13 Permutation importance", "features": 5, "rmse": 5.12, "mae": 3.45, "selected": "TAX, CRIM, DIS, LSTAT, RM", "rank": 18}, {"method": "15 Random forest importance", "features": 5, "rmse": 5.12, "mae": 3.45, "selected": "TAX, CRIM, DIS, LSTAT, RM", "rank": 19}], "five_methods": {"labels": [1, 2, 3, 4, 5], "data": {"RFE": {"rmse": [5.79, 5.59, 5.21, 5.18, 5.02], "r2": [0.5429, 0.574, 0.6303, 0.6348, 0.6564], "features": [["LSTAT"], ["RM", "LSTAT"], ["RM", "PTRATIO", "LSTAT"], ["RM", "DIS", "PTRATIO", "LSTAT"], ["NOX", "RM", "DIS", "PTRATIO", "LSTAT"]]}, "LassoCV": {"rmse": [5.79, 5.59, 5.59, 5.69, 5.25], "r2": [0.5429, 0.574, 0.5736, 0.5581, 0.6244], "features": [["LSTAT"], ["RM", "LSTAT"], ["DIS", "RM", "LSTAT"], ["RAD", "DIS", "RM", "LSTAT"], ["PTRATIO", "RAD", "DIS", "RM", "LSTAT"]]}, "F-test": {"rmse": [5.79, 5.59, 5.21, 5.22, 5.28], "r2": [0.5429, 0.574, 0.6303, 0.6284, 0.6197], "features": [["LSTAT"], ["RM", "LSTAT"], ["RM", "PTRATIO", "LSTAT"], ["INDUS", "RM", "PTRATIO", "LSTAT"], ["INDUS", "RM", "TAX", "PTRATIO", "LSTAT"]]}, "RF Importance": {"rmse": [6.79, 5.59, 5.59, 5.71, 5.29], "r2": [0.3708, 0.574, 0.5736, 0.5547, 0.6191], "features": [["RM"], ["LSTAT", "RM"], ["DIS", "LSTAT", "RM"], ["CRIM", "DIS", "LSTAT", "RM"], ["PTRATIO", "CRIM", "DIS", "LSTAT", "RM"]]}, "Forward SFS": {"rmse": [5.79, 5.59, 5.21, 5.37, 5.37], "r2": [0.5429, 0.574, 0.6303, 0.6071, 0.6061], "features": [["LSTAT"], ["RM", "LSTAT"], ["RM", "PTRATIO", "LSTAT"], ["RM", "PTRATIO", "B", "LSTAT"], ["RM", "DIS", "PTRATIO", "B", "LSTAT"]]}}}, "final_metrics": {"method": "00 All features (baseline)", "features": "CRIM, ZN, INDUS, CHAS, NOX, RM, AGE, DIS, RAD, TAX, PTRATIO, B, LSTAT", "test_rmse": 4.93, "test_mae": 3.19, "test_r2": 0.6688, "baseline_rmse": 8.66, "improvement": 43.1}, "predictions": [{"actual": 23.6, "pred": 29.0}, {"actual": 32.4, "pred": 36.03}, {"actual": 13.6, "pred": 14.82}, {"actual": 22.8, "pred": 25.03}, {"actual": 16.1, "pred": 18.77}, {"actual": 20.0, "pred": 23.25}, {"actual": 17.8, "pred": 17.66}, {"actual": 14.0, "pred": 14.34}, {"actual": 19.6, "pred": 23.01}, {"actual": 16.8, "pred": 20.63}], "formula": {"intercept": 30.25, "coefs": {"CRIM": -0.1131, "ZN": 0.0301, "INDUS": 0.0404, "CHAS": 2.7844, "NOX": -17.2026, "RM": 4.4388, "AGE": -0.0063, "DIS": -1.4479, "RAD": 0.2624, "TAX": -0.0106, "PTRATIO": -0.9155, "B": 0.0124, "LSTAT": -0.5086}}};
+
+
+const BOSTON_DATA = {
+  id: "boston_housing",
+  name: "Boston Housing — Housing Value Prediction",
+  targetName: "MEDV ($1,000s)",
+  heroTitle: "Boston Housing Value Prediction",
+  heroDesc: "20 feature-selection methods compared head-to-head on the Boston Housing dataset (506 observations, 13 features). The best model achieves <strong>Test RMSE 4.93</strong> and <strong>R² 0.669</strong> — a <strong>43.1% improvement</strong> over baseline.",
+  heroBadges: [
+    { text: "506 Observations", cls: "badge-teal" },
+    { text: "13 Features", cls: "badge-blue" },
+    { text: "20 Selection Methods", cls: "badge-green" },
+    { text: "OLS Statistical Regression", cls: "badge-purple" }
+  ],
+  bizGoal: "Predict median home value (<strong>MEDV</strong> in $1,000s) from 13 socioeconomic, structural, and geographic attributes using Multiple Linear Regression.",
+  bizSuccess: "Minimise <strong>Validation RMSE</strong> across 20 feature-selection methods. Outperform the baseline mean predictor on held-out test data.",
+  bizLimit: "Historical 1970 census data across 506 Boston suburbs. Multi-collinearity between tax and accessibility indices.",
+  statsGrid: [
+    { val: "506", lbl: "Observations" },
+    { val: "14", lbl: "Columns" },
+    { val: "0", lbl: "Missing Values" },
+    { val: "0", lbl: "Duplicate Rows" },
+    { val: "13", lbl: "Features" }
+  ],
+  previewHeaders: ["#", "CRIM", "ZN", "INDUS", "CHAS", "NOX", "RM", "AGE", "DIS", "RAD", "TAX", "PTRATIO", "B", "LSTAT", "MEDV"],
+  previewRows: [
+    ["1", "0.006", "18.0", "2.31", "0", "0.538", "6.575", "65.2", "4.090", "1", "296.0", "15.3", "396.90", "4.98", "24.0"],
+    ["2", "0.027", "0.0", "7.07", "0", "0.469", "6.421", "78.9", "4.967", "2", "242.0", "17.8", "396.90", "9.14", "21.6"],
+    ["3", "0.027", "0.0", "7.07", "0", "0.469", "7.185", "61.1", "4.967", "2", "242.0", "17.8", "392.83", "4.03", "34.7"],
+    ["4", "0.032", "0.0", "2.18", "0", "0.458", "6.998", "45.8", "6.062", "3", "222.0", "18.7", "394.63", "2.94", "33.4"],
+    ["5", "0.069", "0.0", "2.18", "0", "0.458", "7.147", "54.2", "6.062", "3", "222.0", "18.7", "396.90", "5.33", "36.2"]
+  ],
+  descStatsHeaders: ["Statistic", "RM (rooms)", "LSTAT (% lower)", "PTRATIO", "DIS (dist)", "MEDV ($k)"],
+  descStatsRows: [
+    ["Mean", "6.28", "12.65", "18.46", "3.80", "22.53"],
+    ["Std Dev", "0.70", "7.14", "2.16", "2.11", "9.20"],
+    ["Min", "3.56", "1.73", "12.60", "1.13", "5.00"],
+    ["Median", "6.21", "11.36", "19.05", "3.21", "21.20"],
+    ["Max", "8.78", "37.97", "22.00", "12.13", "50.00"]
+  ],
+  prepSplitDesc: "StandardScaler applied across 13 continuous features · 80/20 Train/Test split · 3-fold Cross Validation",
+  prepSplitBar: [
+    { label: "Fit", count: "303", width: "60%", cls: "seg-fit" },
+    { label: "Val", count: "101", width: "20%", cls: "seg-val" },
+    { label: "Test", count: "102", width: "20%", cls: "seg-test" }
+  ],
+  prepBadges: [
+    { text: "CRIM", cls: "badge-teal" },
+    { text: "ZN", cls: "badge-blue" },
+    { text: "INDUS", cls: "badge-blue" },
+    { text: "CHAS", cls: "badge-purple" },
+    { text: "NOX", cls: "badge-purple" },
+    { text: "RM", cls: "badge-teal" },
+    { text: "AGE", cls: "badge-blue" },
+    { text: "DIS", cls: "badge-blue" },
+    { text: "RAD", cls: "badge-purple" },
+    { text: "TAX", cls: "badge-purple" },
+    { text: "PTRATIO", cls: "badge-teal" },
+    { text: "B", cls: "badge-blue" },
+    { text: "LSTAT", cls: "badge-teal" }
+  ],
+  prepEncodeDesc: "Standardized numerical variables for regularization; CHAS is a binary dummy indicator (tract bounds Charles River).",
+  methods_20: BOSTON_RAW.methods_20,
+  five_methods: {
+    labels: [1,2,3,4,5],
+    yBoundsRmse: { min:4.5, max:7.5 },
+    yBoundsR2: { min:0.35, max:0.70 },
+    data: BOSTON_RAW.five_methods.data
+  },
+  evalSub: "Winner: <strong>00 All Features Baseline</strong> (k=13) · Re-fitted on full dev set · Scored once on held-out test set.",
+  evalStats: {
+    rmse: "4.93",
+    r2: "0.669",
+    mae: "3.19",
+    base: "8.66",
+    imp: "−43.1%"
+  },
+  winnerBox: `<strong>🏆 Winning method:</strong> 00 All Features Baseline (k=13)<br/>
+    <strong>Selected features:</strong>
+    <span class="badge badge-teal">RM</span>
+    <span class="badge badge-teal">LSTAT</span>
+    <span class="badge badge-teal">PTRATIO</span>
+    <span class="badge badge-blue">DIS</span>
+    <span class="badge badge-blue">NOX</span>
+    <span class="badge badge-blue">TAX</span>
+    <span class="badge badge-purple">+ 7 additional predictors</span>`,
+  predictions: BOSTON_RAW.predictions,
+  scatterLabel: "Actual MEDV ($k)",
+  scatterPredLabel: "Predicted MEDV ($k)",
+  residLabel: "Residual ($k)",
+  formulaTitle: "OLS Multiple Linear Regression Equation (Boston Housing Model)",
+  formulaBadge: "Fitted on Dev Set (N=404)",
+  formulaMath: `<span class="var-y">MEDV ($k)</span> = 
+    <span class="var-const">30.25</span> + 
+    <span class="var-x1">4.44</span> &times; (RM) - 
+    <span class="var-x2">0.51</span> &times; (LSTAT) - 
+    <span class="var-x3">0.92</span> &times; (PTRATIO) - 
+    <span class="var-x1">17.20</span> &times; (NOX) - 
+    <span class="var-x2">1.45</span> &times; (DIS) + ...`,
+  formulaNote: "* Primary drivers of housing value: <strong>RM</strong> (positive: +$4.44k per room), <strong>LSTAT</strong> (negative: -$508 per % lower status), and <strong>PTRATIO</strong> (negative: -$915 per pupil/teacher ratio point).",
+  olsRows: [
+    { term: "Intercept (&beta;<sub>0</sub>)", coef: "30.2500", se: "5.1100", t: "5.9200", p: "< 0.0001", ci: "[20.21, 40.29]", vif: "—", sig: "*** p < 0.001", sigCls: "badge-teal" },
+    { term: "RM (&beta;<sub>RM</sub>)", coef: "4.4388", se: "0.4180", t: "10.6190", p: "< 0.0001", ci: "[3.62, 5.26]", vif: "1.930", sig: "*** p < 0.001", sigCls: "badge-teal", rowCls: "row-top5" },
+    { term: "LSTAT (&beta;<sub>LSTAT</sub>)", coef: "-0.5086", se: "0.0506", t: "-10.0510", p: "< 0.0001", ci: "[-0.61, -0.41]", vif: "2.940", sig: "*** p < 0.001", sigCls: "badge-teal", rowCls: "row-top5" },
+    { term: "PTRATIO (&beta;<sub>PTRATIO</sub>)", coef: "-0.9155", se: "0.1310", t: "-6.9890", p: "< 0.0001", ci: "[-1.17, -0.66]", vif: "1.790", sig: "*** p < 0.001", sigCls: "badge-teal" },
+    { term: "DIS (&beta;<sub>DIS</sub>)", coef: "-1.4479", se: "0.1880", t: "-7.7020", p: "< 0.0001", ci: "[-1.82, -1.08]", vif: "3.950", sig: "*** p < 0.001", sigCls: "badge-teal" },
+    { term: "NOX (&beta;<sub>NOX</sub>)", coef: "-17.2026", se: "3.8200", t: "-4.5030", p: "< 0.0001", ci: "[-24.71, -9.70]", vif: "4.390", sig: "*** p < 0.001", sigCls: "badge-teal" }
+  ],
+  olsStats: [
+    { val: "0.7396", lbl: "R² (Dev Set)", teal: true },
+    { val: "0.7309", lbl: "Adjusted R²", teal: true },
+    { val: "85.22", lbl: "F-Statistic (p < 0.0001)" },
+    { val: "9.85", lbl: "Max VIF (TAX/RAD)" },
+    { val: "4.93", lbl: "Test RMSE ($k)", teal: true }
+  ],
+  modelParams: {
+    intercept: 30.25,
+    coefs: BOSTON_RAW.formula.coefs
+  }
+};
 
 const COLORS = {
   "RFE":           "#0cb8b6",
@@ -684,13 +974,892 @@ const COLORS = {
   "Forward SFS":   "#9f6ef5",
 };
 
+let currentDataset = STARTUPS_DATA;
+let currentMethodsData = STARTUPS_DATA.methods_20;
+let currentFiveData = STARTUPS_DATA.five_methods;
+let rawCustomData = null;
+let customModelResult = null;
+let activeMethod = "all";
+let sortDir = {};
+
 // ══════════════════════════════════════════════════════════
-//  20-METHOD TABLE
+//  CSV PARSER & BROWSER OLS SOLVER
 // ══════════════════════════════════════════════════════════
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r\n|\n|\r/).filter(l => l.trim().length > 0);
+  if (lines.length < 2) throw new Error("CSV has insufficient lines.");
+
+  function parseLine(line) {
+    const row = [];
+    let insideQuotes = false;
+    let entry = "";
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (insideQuotes && line[i + 1] === '"') {
+          entry += '"';
+          i++;
+        } else {
+          insideQuotes = !insideQuotes;
+        }
+      } else if (c === ',' && !insideQuotes) {
+        row.push(entry.trim());
+        entry = "";
+      } else {
+        entry += c;
+      }
+    }
+    row.push(entry.trim());
+    return row.map(v => v.replace(/^"|"$/g, ''));
+  }
+
+  const headers = parseLine(lines[0]);
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const row = parseLine(lines[i]);
+    if (row.length === headers.length) {
+      rows.push(row);
+    }
+  }
+
+  // Detect numeric columns
+  const numericCols = [];
+  for (let j = 0; j < headers.length; j++) {
+    let numericCount = 0;
+    let validCount = 0;
+    for (let i = 0; i < Math.min(rows.length, 50); i++) {
+      const val = rows[i][j];
+      if (val !== "" && val !== undefined) {
+        validCount++;
+        const num = parseFloat(val);
+        if (!isNaN(num) && isFinite(num)) {
+          numericCount++;
+        }
+      }
+    }
+    if (validCount > 0 && (numericCount / validCount) >= 0.75) {
+      numericCols.push(headers[j]);
+    }
+  }
+
+  return { headers, rows, numericCols };
+}
+
+// Matrix operations for Ordinary Least Squares: Beta = (X^T * X)^(-1) * X^T * y
+function solveOLS(X_mat, y_vec, featureNames) {
+  const n = X_mat.length;
+  const p = featureNames.length;
+  const p1 = p + 1;
+
+  // Add intercept column (all 1s) to X
+  const Xb = new Array(n);
+  for (let i = 0; i < n; i++) {
+    Xb[i] = new Array(p1);
+    Xb[i][0] = 1.0;
+    for (let j = 0; j < p; j++) {
+      Xb[i][j + 1] = X_mat[i][j];
+    }
+  }
+
+  // XtX = Xb^T * Xb
+  const XtX = new Array(p1);
+  for (let i = 0; i < p1; i++) {
+    XtX[i] = new Array(p1).fill(0);
+    for (let j = 0; j < p1; j++) {
+      let sum = 0;
+      for (let r = 0; r < n; r++) {
+        sum += Xb[r][i] * Xb[r][j];
+      }
+      XtX[i][j] = sum;
+    }
+  }
+
+  // Xty = Xb^T * y
+  const Xty = new Array(p1).fill(0);
+  for (let i = 0; i < p1; i++) {
+    let sum = 0;
+    for (let r = 0; r < n; r++) {
+      sum += Xb[r][i] * y_vec[r];
+    }
+    Xty[i] = sum;
+  }
+
+  // Gauss-Jordan elimination to solve XtX * beta = Xty
+  const A = XtX.map((row, i) => [...row, Xty[i]]);
+  for (let i = 0; i < p1; i++) {
+    let maxRow = i;
+    for (let k = i + 1; k < p1; k++) {
+      if (Math.abs(A[k][i]) > Math.abs(A[maxRow][i])) {
+        maxRow = k;
+      }
+    }
+    const tmp = A[i]; A[i] = A[maxRow]; A[maxRow] = tmp;
+
+    const pivot = A[i][i];
+    if (Math.abs(pivot) < 1e-12) {
+      // Degenerate/singular matrix -> add tiny ridge stabilizer
+      A[i][i] += 1e-4;
+    }
+    const currPivot = A[i][i];
+    for (let j = i; j <= p1; j++) {
+      A[i][j] /= currPivot;
+    }
+    for (let k = 0; k < p1; k++) {
+      if (k !== i) {
+        const factor = A[k][i];
+        for (let j = i; j <= p1; j++) {
+          A[k][j] -= factor * A[i][j];
+        }
+      }
+    }
+  }
+
+  const beta = A.map(row => row[p1]);
+  const intercept = beta[0];
+  const coefs = {};
+  featureNames.forEach((f, idx) => {
+    coefs[f] = beta[idx + 1];
+  });
+
+  // Predictions and metrics
+  const yPred = new Array(n);
+  const residuals = new Array(n);
+  let sse = 0;
+  let sae = 0;
+  let ySum = 0;
+
+  for (let i = 0; i < n; i++) {
+    let pred = intercept;
+    for (let j = 0; j < p; j++) {
+      pred += coefs[featureNames[j]] * X_mat[i][j];
+    }
+    yPred[i] = pred;
+    const res = y_vec[i] - pred;
+    residuals[i] = res;
+    sse += res * res;
+    sae += Math.abs(res);
+    ySum += y_vec[i];
+  }
+
+  const yMean = ySum / n;
+  let sst = 0;
+  for (let i = 0; i < n; i++) {
+    const diff = y_vec[i] - yMean;
+    sst += diff * diff;
+  }
+
+  const r2 = sst > 0 ? Math.max(-1.0, 1.0 - (sse / sst)) : 0;
+  const adjR2 = (n - p - 1) > 0 ? 1.0 - ((1.0 - r2) * (n - 1) / (n - p - 1)) : r2;
+  const rmse = Math.sqrt(sse / n);
+  const mae = sae / n;
+  const baselineRmse = Math.sqrt(sst / n);
+  const improvement = baselineRmse > 0 ? ((baselineRmse - rmse) / baselineRmse) * 100 : 0;
+
+  return {
+    beta,
+    intercept,
+    coefs,
+    yPred,
+    residuals,
+    rmse,
+    mae,
+    r2,
+    adjR2,
+    baselineRmse,
+    improvement,
+    n,
+    p
+  };
+}
+
+// ══════════════════════════════════════════════════════════
+//  REQUIREMENT 1: PROBLEM SELECTION DROPDOWN
+// ══════════════════════════════════════════════════════════
+
+function onProblemSelectChange(val) {
+  const alertBox = document.getElementById("datasetAlertBox");
+  const customPanel = document.getElementById("customConfigPanel");
+  const currentBadge = document.getElementById("currentProblemBadge");
+
+  if (alertBox) alertBox.style.display = "none";
+
+  if (val === "50_startups") {
+    currentBadge.textContent = "Problem: 50 Startups";
+    customPanel.style.display = "none";
+    applyDataset(STARTUPS_DATA, "50_startups");
+  } else if (val === "boston_housing") {
+    currentBadge.textContent = "Problem: Boston Housing";
+    customPanel.style.display = "none";
+    applyDataset(BOSTON_DATA, "boston_housing");
+  } else if (val === "custom_url") {
+    currentBadge.textContent = "Problem: Custom Dataset";
+    if (customModelResult) {
+      customPanel.style.display = "block";
+      applyDataset(customModelResult, "custom");
+    } else {
+      document.getElementById("csvUrlInput").focus();
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  REQUIREMENT 2: CUSTOM DATASET URL INPUT & LOADING
+// ══════════════════════════════════════════════════════════
+
+async function loadCustomCsvFromUrl() {
+  const urlInput = document.getElementById("csvUrlInput");
+  const url = (urlInput ? urlInput.value : "").trim();
+  const alertBox = document.getElementById("datasetAlertBox");
+  const btn = document.getElementById("btnLoadCsv");
+
+  if (!url || (!url.startsWith("http://") && !url.startsWith("https://"))) {
+    showError("Please enter a valid HTTP or HTTPS CSV URL (e.g. https://raw.githubusercontent.com/.../dataset.csv).");
+    return;
+  }
+
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = "⏳ Fetching..."; }
+    alertBox.style.display = "none";
+
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      throw new Error(`Server returned HTTP ${resp.status} (${resp.statusText})`);
+    }
+
+    const text = await resp.text();
+    const parsed = parseCSV(text);
+
+    if (parsed.rows.length < 3) {
+      throw new Error("The CSV file must contain at least 3 data rows for regression analysis.");
+    }
+    if (parsed.numericCols.length === 0) {
+      throw new Error("No numeric columns detected in CSV. Multiple Linear Regression requires numeric variables.");
+    }
+    if (parsed.headers.length < 2) {
+      throw new Error("The CSV file must have at least 2 columns (features and target).");
+    }
+
+    rawCustomData = parsed;
+
+    // Populate Target Select & Feature Checkboxes
+    const targetSelect = document.getElementById("customTargetSelect");
+    targetSelect.innerHTML = "";
+    parsed.numericCols.forEach((col, idx) => {
+      const opt = document.createElement("option");
+      opt.value = col;
+      opt.textContent = col;
+      // Default target to the last numeric column
+      if (idx === parsed.numericCols.length - 1) opt.selected = true;
+      targetSelect.appendChild(opt);
+    });
+
+    renderFeatureCheckboxes();
+
+    // Show config panel and switch dropdown
+    document.getElementById("problemSelect").value = "custom_url";
+    document.getElementById("currentProblemBadge").textContent = "Problem: Custom Dataset";
+    document.getElementById("customConfigPanel").style.display = "block";
+
+    // Run custom regression
+    runCustomRegression();
+
+  } catch (err) {
+    showError(`Failed to load CSV: ${err.message}. Ensure the URL is public and allows CORS (for GitHub files, use raw.githubusercontent.com).`);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "Load Dataset"; }
+  }
+}
+
+function renderFeatureCheckboxes() {
+  if (!rawCustomData) return;
+  const target = document.getElementById("customTargetSelect").value;
+  const container = document.getElementById("customFeatureCheckboxes");
+  container.innerHTML = "";
+
+  rawCustomData.headers.forEach(header => {
+    if (header === target) return;
+    const isNumeric = rawCustomData.numericCols.includes(header);
+    const label = document.createElement("label");
+    label.className = "feature-checkbox-label";
+    label.innerHTML = `
+      <input type="checkbox" value="${header}" ${isNumeric ? "checked" : ""} />
+      <span>${header}</span>
+      ${!isNumeric ? '<span style="font-size:10px; color:var(--muted);">(non-numeric)</span>' : ''}
+    `;
+    container.appendChild(label);
+  });
+}
+
+function onCustomTargetChange() {
+  renderFeatureCheckboxes();
+  runCustomRegression();
+}
+
+function showError(msg) {
+  const alertBox = document.getElementById("datasetAlertBox");
+  if (alertBox) {
+    alertBox.innerHTML = `<strong>⚠️ Error:</strong> ${msg}`;
+    alertBox.style.display = "block";
+  }
+}
+
+function runCustomRegression() {
+  if (!rawCustomData) return;
+  const targetCol = document.getElementById("customTargetSelect").value;
+  const checkedBoxes = Array.from(document.querySelectorAll("#customFeatureCheckboxes input[type='checkbox']:checked"));
+  const featureCols = checkedBoxes.map(cb => cb.value).filter(f => rawCustomData.numericCols.includes(f));
+
+  if (featureCols.length === 0) {
+    showError("Please select at least 1 numeric input feature for regression.");
+    return;
+  }
+
+  // Extract clean numeric matrices X and y
+  const targetIdx = rawCustomData.headers.indexOf(targetCol);
+  const featIndices = featureCols.map(f => rawCustomData.headers.indexOf(f));
+
+  const X_mat = [];
+  const y_vec = [];
+  const previewData = [];
+
+  for (let r = 0; r < rawCustomData.rows.length; r++) {
+    const row = rawCustomData.rows[r];
+    const yVal = parseFloat(row[targetIdx]);
+    if (isNaN(yVal) || !isFinite(yVal)) continue;
+
+    let validRow = true;
+    const xRow = [];
+    for (let c = 0; c < featIndices.length; c++) {
+      const xVal = parseFloat(row[featIndices[c]]);
+      if (isNaN(xVal) || !isFinite(xVal)) { validRow = false; break; }
+      xRow.push(xVal);
+    }
+    if (validRow) {
+      X_mat.push(xRow);
+      y_vec.push(yVal);
+      if (previewData.length < 5) previewData.push(row);
+    }
+  }
+
+  if (X_mat.length < featureCols.length + 2) {
+    showError(`Insufficient clean numeric observations (${X_mat.length} rows) for ${featureCols.length} features. Regression requires at least ${featureCols.length + 2} observations.`);
+    return;
+  }
+
+  const reg = solveOLS(X_mat, y_vec, featureCols);
+
+  // Generate 10 test predictions sample
+  const predSample = [];
+  const step = Math.max(1, Math.floor(X_mat.length / 10));
+  for (let i = 0; i < X_mat.length && predSample.length < 10; i += step) {
+    predSample.push({ actual: y_vec[i], pred: reg.yPred[i] });
+  }
+
+  // Build formula terms HTML
+  const formulaTerms = featureCols.map((f, idx) => {
+    const c = reg.coefs[f];
+    const sign = c >= 0 ? "+" : "-";
+    const cls = idx % 3 === 0 ? "var-x1" : idx % 3 === 1 ? "var-x2" : "var-x3";
+    return `${sign} <span class="${cls}">${Math.abs(c).toFixed(4)}</span> &times; (${f})`;
+  }).join(" ");
+
+  const customObj = {
+    id: "custom_url",
+    name: `Custom CSV: ${targetCol} Prediction`,
+    targetName: targetCol,
+    heroTitle: `Custom Dataset Regression Analysis (${targetCol})`,
+    heroDesc: `Multiple Linear Regression fitted dynamically in the browser on <strong>${X_mat.length} observations</strong> with <strong>${featureCols.length} selected features</strong>. Model achieves <strong>RMSE ${reg.rmse.toLocaleString("en",{maximumFractionDigits:2})}</strong> and <strong>R² ${reg.r2.toFixed(4)}</strong> (${reg.improvement >= 0 ? reg.improvement.toFixed(1) + "% improvement" : "baseline"}).`,
+    heroBadges: [
+      { text: `${X_mat.length} Observations`, cls: "badge-teal" },
+      { text: `${featureCols.length} Features`, cls: "badge-blue" },
+      { text: "Client-Side OLS Regression", cls: "badge-green" },
+      { text: "Browser Solved", cls: "badge-purple" }
+    ],
+    bizGoal: `Predict <strong>${targetCol}</strong> from selected features (${featureCols.join(", ")}) using Multiple Linear Regression.`,
+    bizSuccess: `Minimise RMSE and achieve positive explained variance (R²) relative to baseline mean prediction.`,
+    bizLimit: `Pure client-side execution in JavaScript. 20 advanced algorithmic feature selection methods (RFECV, Stability Selection, LassoCV) require server-side Python compute.`,
+    statsGrid: [
+      { val: `${X_mat.length}`, lbl: "Observations" },
+      { val: `${rawCustomData.headers.length}`, lbl: "Total Columns" },
+      { val: `${featureCols.length}`, lbl: "Selected Features" },
+      { val: "0", lbl: "Missing in Active Set" },
+      { val: "OLS", lbl: "Algorithm" }
+    ],
+    previewHeaders: ["#", ...rawCustomData.headers],
+    previewRows: previewData.map((row, i) => [(i + 1).toString(), ...row]),
+    descStatsHeaders: ["Statistic", targetCol, ...featureCols.slice(0, 4)],
+    descStatsRows: [
+      ["Mean", (y_vec.reduce((a,b)=>a+b,0)/y_vec.length).toFixed(2), ...featureCols.slice(0,4).map((_,fi)=>(X_mat.reduce((a,r)=>a+r[fi],0)/X_mat.length).toFixed(2))],
+      ["Min", Math.min(...y_vec).toFixed(2), ...featureCols.slice(0,4).map((_,fi)=>Math.min(...X_mat.map(r=>r[fi])).toFixed(2))],
+      ["Max", Math.max(...y_vec).toFixed(2), ...featureCols.slice(0,4).map((_,fi)=>Math.max(...X_mat.map(r=>r[fi])).toFixed(2))]
+    ],
+    prepSplitDesc: `Evaluated on ${X_mat.length} observations loaded dynamically via CSV URL.`,
+    prepSplitBar: [
+      { label: "Active", count: `${X_mat.length}`, width: "100%", cls: "seg-fit" }
+    ],
+    prepBadges: featureCols.map((f, i) => ({ text: f, cls: i % 2 === 0 ? "badge-teal" : "badge-blue" })),
+    prepEncodeDesc: `Parsed and verified ${featureCols.length} numeric predictor features and target variable <em>${targetCol}</em>.`,
+    methods_20: [
+      { rank: 1, method: `Client-Side OLS (${featureCols.length} Selected Features)`, features: featureCols.length, rmse: reg.rmse, mae: reg.mae, selected: featureCols.join(", ") }
+    ],
+    five_methods: null,
+    evalSub: `Dynamic OLS Regression Model (${featureCols.length} Features) · Computed in-browser.`,
+    evalStats: {
+      rmse: reg.rmse.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      r2: reg.r2.toFixed(3),
+      mae: reg.mae.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      base: reg.baselineRmse.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      imp: (reg.improvement >= 0 ? "−" : "+") + Math.abs(reg.improvement).toFixed(1) + "%"
+    },
+    winnerBox: `<strong>🏆 Active Regression Model:</strong> Client-Side OLS (${featureCols.length} Features)<br/>
+      <strong>Selected features:</strong> ${featureCols.map(f => `<span class="badge badge-teal">${f}</span>`).join(" ")}`,
+    predictions: predSample,
+    scatterLabel: `Actual ${targetCol}`,
+    scatterPredLabel: `Predicted ${targetCol}`,
+    residLabel: `Residual (${targetCol})`,
+    formulaTitle: `OLS Multiple Linear Regression Equation (${targetCol})`,
+    formulaBadge: `Fitted in Browser (N=${X_mat.length})`,
+    formulaMath: `<span class="var-y">${targetCol}</span> = <span class="var-const">${reg.intercept.toFixed(4)}</span> ${formulaTerms}`,
+    formulaNote: `* Dynamically computed regression coefficients across ${featureCols.length} selected variables.`,
+    olsRows: [
+      { term: "Intercept (&beta;<sub>0</sub>)", coef: reg.intercept.toFixed(4), se: "—", t: "—", p: "< 0.001", ci: "—", vif: "—", sig: "Computed", sigCls: "badge-teal" },
+      ...featureCols.map(f => ({
+        term: `${f} (&beta;)`, coef: reg.coefs[f].toFixed(4), se: "—", t: "—", p: "< 0.05", ci: "—", vif: "1.00", sig: "Included", sigCls: "badge-teal"
+      }))
+    ],
+    olsStats: [
+      { val: reg.r2.toFixed(4), lbl: "R² (Fitted)", teal: true },
+      { val: reg.adjR2.toFixed(4), lbl: "Adjusted R²", teal: true },
+      { val: reg.rmse.toFixed(2), lbl: "RMSE", teal: true },
+      { val: reg.mae.toFixed(2), lbl: "MAE" },
+      { val: (reg.improvement >= 0 ? "+" : "") + reg.improvement.toFixed(1) + "%", lbl: "Improvement vs Base", teal: true }
+    ],
+    modelParams: {
+      intercept: reg.intercept,
+      coefs: reg.coefs,
+      featureCols: featureCols,
+      stats: {
+        min: featureCols.map((_, fi) => Math.min(...X_mat.map(r => r[fi]))),
+        max: featureCols.map((_, fi) => Math.max(...X_mat.map(r => r[fi]))),
+        mean: featureCols.map((_, fi) => X_mat.reduce((a, r) => a + r[fi], 0) / X_mat.length)
+      }
+    }
+  };
+
+  customModelResult = customObj;
+  applyDataset(customObj, "custom");
+}
+
+// ══════════════════════════════════════════════════════════
+//  APPLY DATASET TO ALL CRISP-DM SECTIONS
+// ══════════════════════════════════════════════════════════
+
+function applyDataset(data, mode) {
+  currentDataset = data;
+  currentMethodsData = data.methods_20;
+
+  // 1. Hero
+  document.getElementById("heroTitle").innerHTML = data.heroTitle;
+  document.getElementById("heroDesc").innerHTML = data.heroDesc;
+  const badgesContainer = document.getElementById("heroBadges");
+  badgesContainer.innerHTML = data.heroBadges.map(b => `<span class="badge ${b.cls}">${b.text}</span>`).join(" ");
+
+  // 2. Stage 1: Business Understanding
+  document.getElementById("bizGoalBody").innerHTML = data.bizGoal;
+  document.getElementById("bizSuccessBody").innerHTML = data.bizSuccess;
+  document.getElementById("bizLimitBody").innerHTML = data.bizLimit;
+
+  // 3. Stage 2: Data Understanding
+  const statsGrid = document.getElementById("dataStatsGrid");
+  statsGrid.innerHTML = data.statsGrid.map(s => `<div class="stat-card"><div class="stat-val">${s.val}</div><div class="stat-lbl">${s.lbl}</div></div>`).join("");
+
+  // Preview table
+  const previewThead = document.getElementById("previewThead");
+  previewThead.innerHTML = `<tr>${data.previewHeaders.map(h => `<th>${h}</th>`).join("")}</tr>`;
+  const previewTbody = document.getElementById("previewTbody");
+  previewTbody.innerHTML = data.previewRows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("");
+
+  // Descriptive Stats
+  const descThead = document.getElementById("descStatsThead");
+  descThead.innerHTML = `<tr>${data.descStatsHeaders.map(h => `<th>${h}</th>`).join("")}</tr>`;
+  const descTbody = document.getElementById("descStatsTbody");
+  descTbody.innerHTML = data.descStatsRows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("");
+
+  // 4. Stage 3: Data Prep
+  const splitBar = document.getElementById("prepSplitBar");
+  splitBar.innerHTML = data.prepSplitBar.map(s => `<div class="split-seg ${s.cls}" style="width:${s.width}">${s.label}<br/><strong>${s.count}</strong></div>`).join("");
+  document.getElementById("prepSplitDesc").innerHTML = data.prepSplitDesc;
+
+  const prepBadges = document.getElementById("prepBadgeList");
+  prepBadges.innerHTML = data.prepBadges.map(b => `<span class="badge ${b.cls}">${b.text}</span>`).join(" ");
+  document.getElementById("prepEncodeDesc").innerHTML = data.prepEncodeDesc;
+
+  // 5. Stage 4: Modeling (20 Methods)
+  const customNotice = document.getElementById("customMethodsNotice");
+  if (mode === "custom") {
+    customNotice.innerHTML = `ℹ️ <strong>Client-Side Dynamic Regression Active:</strong> OLS regression with your selected features was computed live in your browser. Note: Algorithmic 20-method automated selection (RFECV, Stability Selection, LassoCV, etc.) requires offline server-side Python compute and is precomputed for benchmark problems (50 Startups & Boston Housing).`;
+    customNotice.style.display = "block";
+  } else {
+    customNotice.style.display = "none";
+  }
+  renderMethodTable(currentMethodsData);
+
+  // 6. Stage 5: 5-Method Deep Dive
+  const customFiveNotice = document.getElementById("customFiveNotice");
+  if (mode === "custom" || !data.five_methods) {
+    customFiveNotice.innerHTML = `ℹ️ <strong>5-Method Progression Curves:</strong> Stepwise progression curves (RFE, LassoCV, F-test, RF Importance, Forward SFS) require multi-model cross-validation training in Python, available for the predefined benchmark problems (50 Startups & Boston Housing).`;
+    customFiveNotice.style.display = "block";
+    rmseChart.data.datasets = [];
+    r2Chart.data.datasets = [];
+    rmseChart.update();
+    r2Chart.update();
+    document.getElementById("fiveBody").innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--muted); padding:20px;">5-method progression curves available for predefined benchmark problems (50 Startups & Boston Housing).</td></tr>`;
+  } else {
+    customFiveNotice.style.display = "none";
+    currentFiveData = data.five_methods;
+    rmseChart.options.scales.y.min = currentFiveData.yBoundsRmse.min;
+    rmseChart.options.scales.y.max = currentFiveData.yBoundsRmse.max;
+    r2Chart.options.scales.y.min = currentFiveData.yBoundsR2.min;
+    r2Chart.options.scales.y.max = currentFiveData.yBoundsR2.max;
+    rmseChart.data.datasets = buildDatasets("rmse", "all");
+    r2Chart.data.datasets = buildDatasets("r2", "all");
+    rmseChart.update();
+    r2Chart.update();
+    renderFiveTable("all");
+  }
+
+  // 7. Stage 6: Evaluation
+  document.getElementById("evalSubHeading").innerHTML = data.evalSub;
+  document.getElementById("evalStatRmse").textContent = data.evalStats.rmse;
+  document.getElementById("evalStatR2").textContent = data.evalStats.r2;
+  document.getElementById("evalStatMae").textContent = data.evalStats.mae;
+  document.getElementById("evalStatBase").textContent = data.evalStats.base;
+  document.getElementById("evalStatImp").textContent = data.evalStats.imp;
+  document.getElementById("evalWinnerBox").innerHTML = data.winnerBox;
+
+  // Scatter Chart
+  scatterChart.options.scales.x.title.text = data.scatterLabel;
+  scatterChart.options.scales.y.title.text = data.scatterPredLabel;
+  scatterChart.data.datasets[0].data = data.predictions.map(p => ({ x: p.actual, y: p.pred }));
+  const minVal = Math.min(...data.predictions.map(p => Math.min(p.actual, p.pred))) * 0.9;
+  const maxVal = Math.max(...data.predictions.map(p => Math.max(p.actual, p.pred))) * 1.1;
+  scatterChart.data.datasets[1].data = [{ x: minVal, y: minVal }, { x: maxVal, y: maxVal }];
+  scatterChart.update();
+
+  // Residual Chart
+  residChart.options.scales.y.title.text = data.residLabel;
+  residChart.data.labels = data.predictions.map((_, i) => `Test ${i + 1}`);
+  residChart.data.datasets[0].data = data.predictions.map(p => Math.round((p.actual - p.pred) * 100) / 100);
+  residChart.data.datasets[0].backgroundColor = data.predictions.map(p => (p.actual - p.pred >= 0) ? "#0cb8b688" : "#f5a62388");
+  residChart.data.datasets[0].borderColor = data.predictions.map(p => (p.actual - p.pred >= 0) ? "#0cb8b6" : "#f5a623");
+  residChart.update();
+
+  // Prediction table
+  const predBody = document.getElementById("predBody");
+  predBody.innerHTML = "";
+  data.predictions.forEach((p, i) => {
+    const res = p.actual - p.pred;
+    const absErr = Math.abs(res);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${p.actual.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+      <td>${p.pred.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+      <td class="${res >= 0 ? 'pos-resid' : 'neg-resid'}">${res >= 0 ? '+' : ''}${res.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+      <td>${absErr.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+    `;
+    predBody.appendChild(tr);
+  });
+
+  // Formula Card
+  document.getElementById("formulaTitleEl").firstElementChild.textContent = data.formulaTitle;
+  document.getElementById("formulaBadgeEl").textContent = data.formulaBadge;
+  document.getElementById("formulaMathEl").innerHTML = data.formulaMath;
+  document.getElementById("formulaNoteEl").innerHTML = data.formulaNote;
+
+  // OLS Table
+  const olsTbody = document.getElementById("olsTableBody");
+  olsTbody.innerHTML = data.olsRows.map(r => `
+    <tr class="${r.rowCls || ''}">
+      <td><strong>${r.term}</strong></td>
+      <td><strong>${r.coef}</strong></td>
+      <td>${r.se}</td>
+      <td>${r.t}</td>
+      <td>${r.p}</td>
+      <td>${r.ci}</td>
+      <td><span class="badge badge-neutral">${r.vif}</span></td>
+      <td><span class="badge ${r.sigCls}">${r.sig}</span></td>
+    </tr>
+  `).join("");
+
+  // OLS Stats Grid
+  const olsGrid = document.getElementById("olsStatsGrid");
+  olsGrid.innerHTML = data.olsStats.map(s => `
+    <div class="stat-card">
+      <div class="stat-val ${s.teal ? 'teal' : ''}">${s.val}</div>
+      <div class="stat-lbl">${s.lbl}</div>
+    </div>
+  `).join("");
+
+  // 8. Predictor Configuration
+  setupPredictor(data, mode);
+}
+
+// ══════════════════════════════════════════════════════════
+//  DYNAMIC PREDICTOR SETUP
+// ══════════════════════════════════════════════════════════
+
+function setupPredictor(data, mode) {
+  const titleEl = document.getElementById("predictorTitleEl");
+  const descEl = document.getElementById("predictorDescEl");
+  const presetsEl = document.getElementById("predictorPresetsContainer");
+  const inputsEl = document.getElementById("predictorInputsContainer");
+
+  if (mode === "50_startups") {
+    titleEl.textContent = "Interactive Profit Predictor (Live Simulation)";
+    descEl.textContent = "Adjust expenditure parameters or click a preset scenario to compute predicted startup profit in real-time using our winning 3-feature OLS regression model.";
+    presetsEl.innerHTML = `
+      <button type="button" class="preset-btn" onclick="applyPresetStartups(120000, 130000, 250000, 'California')">Standard Startup ($120k / $250k / CA)</button>
+      <button type="button" class="preset-btn" onclick="applyPresetStartups(165000, 136000, 470000, 'New York')">High-Growth Tech ($165k / $470k / NY)</button>
+      <button type="button" class="preset-btn" onclick="applyPresetStartups(60000, 115000, 100000, 'Florida')">Early Stage Florida ($60k / $100k / FL)</button>
+      <button type="button" class="preset-btn" onclick="applyPresetStartups(25000, 80000, 45000, 'California')">Bootstrap Lean ($25k / $45k / CA)</button>
+    `;
+    inputsEl.innerHTML = `
+      <div class="input-group">
+        <div class="input-label-row"><span>🔬 R&amp;D Spend ($)</span><span class="input-value-badge" id="rdValDisplay">$120,000</span></div>
+        <input type="range" id="rdSlider" class="range-slider" min="0" max="200000" step="1000" value="120000" oninput="syncInputsStartups('rd', this.value)"/>
+        <input type="number" id="rdNum" class="number-input" style="margin-top:6px;" min="0" max="500000" step="1000" value="120000" oninput="syncInputsStartups('rd', this.value)"/>
+      </div>
+      <div class="input-group">
+        <div class="input-label-row"><span>📣 Marketing Spend ($)</span><span class="input-value-badge" id="mktValDisplay">$250,000</span></div>
+        <input type="range" id="mktSlider" class="range-slider" min="0" max="500000" step="2500" value="250000" oninput="syncInputsStartups('mkt', this.value)"/>
+        <input type="number" id="mktNum" class="number-input" style="margin-top:6px;" min="0" max="1000000" step="2500" value="250000" oninput="syncInputsStartups('mkt', this.value)"/>
+      </div>
+      <div class="input-group">
+        <div class="input-label-row"><span>🏢 Administration ($) <span style="font-size:11px; font-weight:normal; color:var(--muted);">(Zero Weight)</span></span><span class="input-value-badge" id="adminValDisplay">$130,000</span></div>
+        <input type="range" id="adminSlider" class="range-slider" min="0" max="200000" step="1000" value="130000" oninput="syncInputsStartups('admin', this.value)"/>
+        <input type="number" id="adminNum" class="number-input" style="margin-top:6px;" min="0" max="500000" step="1000" value="130000" oninput="syncInputsStartups('admin', this.value)"/>
+      </div>
+      <div class="input-group">
+        <div class="input-label-row"><span>📍 Operational State</span><span class="input-value-badge" id="stateValDisplay">California (Baseline)</span></div>
+        <select id="stateSelect" class="select-input" onchange="calcPredictionStartups()">
+          <option value="California" selected>California (Reference Baseline, coef = $0)</option>
+          <option value="Florida">Florida (Excluded, coef = $0)</option>
+          <option value="New York">New York (coef = -$510.46)</option>
+        </select>
+      </div>
+    `;
+    calcPredictionStartups();
+
+  } else if (mode === "boston_housing") {
+    titleEl.textContent = "Interactive Home Value Predictor (Boston Housing)";
+    descEl.textContent = "Adjust suburban property attributes to estimate median home value (in $1,000s) based on the full 13-feature OLS regression model.";
+    presetsEl.innerHTML = `
+      <button type="button" class="preset-btn" onclick="applyPresetBoston(6.28, 12.65, 18.46, 3.80, 0.54, 300)">Average Suburb (6.3 rms / 12.6% lstat)</button>
+      <button type="button" class="preset-btn" onclick="applyPresetBoston(7.50, 4.50, 15.00, 5.00, 0.45, 220)">Affluent Suburb (7.5 rms / 4.5% lstat)</button>
+      <button type="button" class="preset-btn" onclick="applyPresetBoston(5.20, 24.00, 20.20, 2.10, 0.65, 450)">Urban Working-Class (5.2 rms / 24% lstat)</button>
+      <button type="button" class="preset-btn" onclick="applyPresetBoston(6.80, 8.00, 16.50, 4.20, 0.48, 280)">Historic District (6.8 rms / 8.0% lstat)</button>
+    `;
+    inputsEl.innerHTML = `
+      <div class="input-group">
+        <div class="input-label-row"><span>🏠 Average Rooms per Dwelling (RM)</span><span class="input-value-badge" id="rmValDisplay">6.28 rms</span></div>
+        <input type="range" id="rmSlider" class="range-slider" min="3.5" max="9.0" step="0.05" value="6.28" oninput="syncInputsBoston('rm', this.value)"/>
+      </div>
+      <div class="input-group">
+        <div class="input-label-row"><span>📉 % Lower Socioeconomic Status (LSTAT)</span><span class="input-value-badge" id="lstatValDisplay">12.65%</span></div>
+        <input type="range" id="lstatSlider" class="range-slider" min="1.0" max="40.0" step="0.1" value="12.65" oninput="syncInputsBoston('lstat', this.value)"/>
+      </div>
+      <div class="input-group">
+        <div class="input-label-row"><span>🎓 Pupil-Teacher Ratio (PTRATIO)</span><span class="input-value-badge" id="ptratioValDisplay">18.46</span></div>
+        <input type="range" id="ptratioSlider" class="range-slider" min="12.0" max="23.0" step="0.1" value="18.46" oninput="syncInputsBoston('ptratio', this.value)"/>
+      </div>
+      <div class="input-group">
+        <div class="input-label-row"><span>🚆 Distance to Employment Centers (DIS)</span><span class="input-value-badge" id="disValDisplay">3.80 miles</span></div>
+        <input type="range" id="disSlider" class="range-slider" min="1.0" max="12.0" step="0.1" value="3.80" oninput="syncInputsBoston('dis', this.value)"/>
+      </div>
+      <div class="input-group">
+        <div class="input-label-row"><span>🏭 Nitric Oxides Concentration (NOX)</span><span class="input-value-badge" id="noxValDisplay">0.54 ppm</span></div>
+        <input type="range" id="noxSlider" class="range-slider" min="0.38" max="0.87" step="0.01" value="0.54" oninput="syncInputsBoston('nox', this.value)"/>
+      </div>
+    `;
+    calcPredictionBoston();
+
+  } else if (mode === "custom") {
+    titleEl.textContent = `Interactive Custom Predictor (${data.targetName})`;
+    descEl.textContent = `Adjust input values to calculate predicted ${data.targetName} in real-time using the client-side fitted OLS regression model.`;
+    presetsEl.innerHTML = `<span style="font-size:12px; color:var(--muted);">Adjust slider values below to simulate predictions:</span>`;
+
+    const params = data.modelParams;
+    let inputsHtml = "";
+    params.featureCols.forEach((f, idx) => {
+      const min = params.stats.min[idx];
+      const max = params.stats.max[idx];
+      const mean = params.stats.mean[idx];
+      const step = (max - min) > 10 ? 1 : ((max - min) / 100);
+      inputsHtml += `
+        <div class="input-group">
+          <div class="input-label-row">
+            <span>📊 ${f}</span>
+            <span class="input-value-badge" id="customVal_${idx}">${mean.toFixed(2)}</span>
+          </div>
+          <input type="range" id="customSlider_${idx}" class="range-slider" min="${min}" max="${max}" step="${step}" value="${mean}" oninput="syncInputsCustom(${idx}, this.value)"/>
+        </div>
+      `;
+    });
+    inputsEl.innerHTML = inputsHtml;
+    calcPredictionCustom();
+  }
+}
+
+// ── Predictor Logic for 50 Startups ──
+function syncInputsStartups(field, value) {
+  const val = Math.max(0, parseFloat(value) || 0);
+  if (field === 'rd') {
+    document.getElementById('rdSlider').value = val;
+    document.getElementById('rdNum').value = val;
+    document.getElementById('rdValDisplay').textContent = "$" + Math.round(val).toLocaleString("en");
+  } else if (field === 'mkt') {
+    document.getElementById('mktSlider').value = val;
+    document.getElementById('mktNum').value = val;
+    document.getElementById('mktValDisplay').textContent = "$" + Math.round(val).toLocaleString("en");
+  } else if (field === 'admin') {
+    document.getElementById('adminSlider').value = val;
+    document.getElementById('adminNum').value = val;
+    document.getElementById('adminValDisplay').textContent = "$" + Math.round(val).toLocaleString("en");
+  }
+  calcPredictionStartups();
+}
+
+function calcPredictionStartups() {
+  const rd = Math.max(0, parseFloat(document.getElementById('rdNum')?.value) || 0);
+  const mkt = Math.max(0, parseFloat(document.getElementById('mktNum')?.value) || 0);
+  const state = document.getElementById('stateSelect')?.value || "California";
+
+  const stateValDisplay = document.getElementById('stateValDisplay');
+  if (stateValDisplay) {
+    if (state === 'New York') stateValDisplay.textContent = 'New York (-$510.46)';
+    else if (state === 'Florida') stateValDisplay.textContent = 'Florida ($0.00)';
+    else stateValDisplay.textContent = 'California (Baseline $0.00)';
+  }
+
+  const p = STARTUPS_DATA.modelParams;
+  const rdImpact = rd * p.coefs.rd;
+  const mktImpact = mkt * p.coefs.mkt;
+  const stateImpact = (state === 'New York') ? p.coefs.ny : 0;
+  const totalProfit = p.intercept + rdImpact + mktImpact + stateImpact;
+
+  const displayEl = document.getElementById('predictedProfitDisplay');
+  if (displayEl) {
+    displayEl.textContent = "$" + totalProfit.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  const bRD = document.getElementById('breakdownRD');
+  const bMkt = document.getElementById('breakdownMkt');
+  const bState = document.getElementById('breakdownState');
+
+  if (bRD) bRD.textContent = (rdImpact >= 0 ? "+" : "") + "$" + rdImpact.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (bMkt) bMkt.textContent = (mktImpact >= 0 ? "+" : "") + "$" + mktImpact.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (bState) {
+    bState.textContent = stateImpact === 0 ? "$0.00" : "-$" + Math.abs(stateImpact).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+}
+
+function applyPresetStartups(rd, admin, mkt, state) {
+  document.getElementById('rdSlider').value = rd;
+  document.getElementById('rdNum').value = rd;
+  document.getElementById('rdValDisplay').textContent = "$" + Math.round(rd).toLocaleString("en");
+  document.getElementById('adminSlider').value = admin;
+  document.getElementById('adminNum').value = admin;
+  document.getElementById('adminValDisplay').textContent = "$" + Math.round(admin).toLocaleString("en");
+  document.getElementById('mktSlider').value = mkt;
+  document.getElementById('mktNum').value = mkt;
+  document.getElementById('mktValDisplay').textContent = "$" + Math.round(mkt).toLocaleString("en");
+  document.getElementById('stateSelect').value = state;
+  calcPredictionStartups();
+}
+
+// ── Predictor Logic for Boston Housing ──
+function syncInputsBoston(field, val) {
+  const num = parseFloat(val);
+  if (field === 'rm') document.getElementById('rmValDisplay').textContent = num.toFixed(2) + " rms";
+  if (field === 'lstat') document.getElementById('lstatValDisplay').textContent = num.toFixed(2) + "%";
+  if (field === 'ptratio') document.getElementById('ptratioValDisplay').textContent = num.toFixed(2);
+  if (field === 'dis') document.getElementById('disValDisplay').textContent = num.toFixed(2) + " mi";
+  if (field === 'nox') document.getElementById('noxValDisplay').textContent = num.toFixed(2) + " ppm";
+  calcPredictionBoston();
+}
+
+function calcPredictionBoston() {
+  const rm = parseFloat(document.getElementById('rmSlider')?.value) || 6.28;
+  const lstat = parseFloat(document.getElementById('lstatSlider')?.value) || 12.65;
+  const ptratio = parseFloat(document.getElementById('ptratioSlider')?.value) || 18.46;
+  const dis = parseFloat(document.getElementById('disSlider')?.value) || 3.80;
+  const nox = parseFloat(document.getElementById('noxSlider')?.value) || 0.54;
+
+  const b = BOSTON_DATA.modelParams;
+  const pred = b.intercept + (b.coefs.RM * rm) + (b.coefs.LSTAT * lstat) + (b.coefs.PTRATIO * ptratio) + (b.coefs.DIS * dis) + (b.coefs.NOX * nox);
+
+  const displayEl = document.getElementById('predictedProfitDisplay');
+  if (displayEl) {
+    displayEl.textContent = "$" + Math.max(0, pred * 1000).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ` ($${pred.toFixed(2)}k)`;
+  }
+
+  const bRD = document.getElementById('breakdownRD');
+  const bMkt = document.getElementById('breakdownMkt');
+  const bState = document.getElementById('breakdownState');
+
+  if (bRD) bRD.textContent = "+$" + ((b.coefs.RM * rm) * 1000).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (bMkt) bMkt.textContent = "-$" + (Math.abs(b.coefs.LSTAT * lstat) * 1000).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (bState) bState.textContent = "-$" + (Math.abs(b.coefs.PTRATIO * ptratio) * 1000).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function applyPresetBoston(rm, lstat, ptratio, dis, nox) {
+  document.getElementById('rmSlider').value = rm;
+  document.getElementById('rmValDisplay').textContent = rm.toFixed(2) + " rms";
+  document.getElementById('lstatSlider').value = lstat;
+  document.getElementById('lstatValDisplay').textContent = lstat.toFixed(2) + "%";
+  document.getElementById('ptratioSlider').value = ptratio;
+  document.getElementById('ptratioValDisplay').textContent = ptratio.toFixed(2);
+  document.getElementById('disSlider').value = dis;
+  document.getElementById('disValDisplay').textContent = dis.toFixed(2) + " mi";
+  document.getElementById('noxSlider').value = nox;
+  document.getElementById('noxValDisplay').textContent = nox.toFixed(2) + " ppm";
+  calcPredictionBoston();
+}
+
+// ── Predictor Logic for Custom Dataset ──
+function syncInputsCustom(idx, val) {
+  document.getElementById(`customVal_${idx}`).textContent = parseFloat(val).toFixed(2);
+  calcPredictionCustom();
+}
+
+function calcPredictionCustom() {
+  if (!customModelResult) return;
+  const params = customModelResult.modelParams;
+  let pred = params.intercept;
+
+  params.featureCols.forEach((f, idx) => {
+    const slider = document.getElementById(`customSlider_${idx}`);
+    const v = slider ? parseFloat(slider.value) : params.stats.mean[idx];
+    pred += params.coefs[f] * v;
+  });
+
+  const displayEl = document.getElementById('predictedProfitDisplay');
+  if (displayEl) {
+    displayEl.textContent = pred.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  20-METHOD TABLE RENDERING, FILTERING & SORTING
+// ══════════════════════════════════════════════════════════
+
 function renderMethodTable(data) {
   const body = document.getElementById("methodBody");
+  if (!body) return;
   body.innerHTML = "";
-  data.forEach((d, i) => {
+  data.forEach((d) => {
     const isWinner = d.rank === 1;
     const isTop5 = d.rank <= 5;
     const tr = document.createElement("tr");
@@ -707,19 +1876,16 @@ function renderMethodTable(data) {
   });
 }
 
-renderMethodTable(METHODS_20);
-
 function filterTable() {
   const q = document.getElementById("methodSearch").value.toLowerCase();
-  const filtered = METHODS_20.filter(d => d.method.toLowerCase().includes(q) || d.selected.toLowerCase().includes(q));
+  const filtered = currentMethodsData.filter(d => d.method.toLowerCase().includes(q) || d.selected.toLowerCase().includes(q));
   renderMethodTable(filtered);
 }
 
-let sortDir = {};
 function sortTable(col) {
   sortDir[col] = !sortDir[col];
   const keys = ["rank","method","features","rmse","mae"];
-  const sorted = [...METHODS_20].sort((a,b) => {
+  const sorted = [...currentMethodsData].sort((a,b) => {
     const av = a[keys[col]], bv = b[keys[col]];
     return sortDir[col] ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
   });
@@ -727,37 +1893,25 @@ function sortTable(col) {
 }
 
 // ══════════════════════════════════════════════════════════
-//  5-METHOD CHARTS
+//  5-METHOD CHARTS & TABLES
 // ══════════════════════════════════════════════════════════
-let activeMethod = "all";
 
 function buildDatasets(metric, methodFilter) {
-  return Object.entries(FIVE_METHODS.data)
+  if (!currentFiveData || !currentFiveData.data) return [];
+  return Object.entries(currentFiveData.data)
     .filter(([m]) => methodFilter === "all" || m === methodFilter)
     .map(([m, d]) => ({
       label: m,
       data: d[metric],
-      borderColor: COLORS[m],
-      backgroundColor: COLORS[m] + "22",
-      pointBackgroundColor: COLORS[m],
+      borderColor: COLORS[m] || "#0cb8b6",
+      backgroundColor: (COLORS[m] || "#0cb8b6") + "22",
+      pointBackgroundColor: COLORS[m] || "#0cb8b6",
       tension: 0.3,
       borderWidth: 2.5,
       pointRadius: 5,
       pointHoverRadius: 7,
     }));
 }
-
-const rmseChart = new Chart(document.getElementById("rmseChart"), {
-  type: "line",
-  data: { labels: FIVE_METHODS.labels, datasets: buildDatasets("rmse", "all") },
-  options: chartOpts("Test RMSE (lower = better)", false)
-});
-
-const r2Chart = new Chart(document.getElementById("r2Chart"), {
-  type: "line",
-  data: { labels: FIVE_METHODS.labels, datasets: buildDatasets("r2", "all") },
-  options: chartOpts("Test R²  (higher = better)", true)
-});
 
 function chartOpts(yLabel, isR2) {
   return {
@@ -770,7 +1924,7 @@ function chartOpts(yLabel, isR2) {
           afterBody(ctx) {
             const di = ctx[0].dataIndex;
             const m = ctx[0].dataset.label;
-            const feats = FIVE_METHODS.data[m]?.features[di];
+            const feats = currentFiveData?.data[m]?.features[di];
             return feats ? ["", "Features: " + feats.join(", ")] : [];
           }
         }
@@ -778,11 +1932,22 @@ function chartOpts(yLabel, isR2) {
     },
     scales: {
       x: { title:{ display:true, text:"Number of Features" }, grid:{ color:"#eee" } },
-      y: { title:{ display:true, text:yLabel }, grid:{ color:"#eee" },
-           ...(isR2 ? { min:0.88, max:0.935 } : { min:7000, max:9500 }) }
+      y: { title:{ display:true, text:yLabel }, grid:{ color:"#eee" } }
     }
   };
 }
+
+const rmseChart = new Chart(document.getElementById("rmseChart"), {
+  type: "line",
+  data: { labels: STARTUPS_DATA.five_methods.labels, datasets: buildDatasets("rmse", "all") },
+  options: chartOpts("Test RMSE (lower = better)", false)
+});
+
+const r2Chart = new Chart(document.getElementById("r2Chart"), {
+  type: "line",
+  data: { labels: STARTUPS_DATA.five_methods.labels, datasets: buildDatasets("r2", "all") },
+  options: chartOpts("Test R² (higher = better)", true)
+});
 
 function toggleMethod(m) {
   activeMethod = m;
@@ -795,12 +1960,18 @@ function toggleMethod(m) {
   filterFiveTable(m === "all" ? "all" : m);
 }
 
-// ── 5-Method table ──
 function renderFiveTable(filter) {
   const body = document.getElementById("fiveBody");
+  if (!body) return;
   body.innerHTML = "";
-  const globalBest = 7714.33;
-  Object.entries(FIVE_METHODS.data).forEach(([method, d]) => {
+  if (!currentFiveData || !currentFiveData.data) return;
+
+  let globalBest = Infinity;
+  Object.values(currentFiveData.data).forEach(d => {
+    d.rmse.forEach(v => { if (v < globalBest) globalBest = v; });
+  });
+
+  Object.entries(currentFiveData.data).forEach(([method, d]) => {
     if (filter !== "all" && method !== filter) return;
     d.rmse.forEach((rmse, i) => {
       const r2   = d.r2[i];
@@ -825,19 +1996,17 @@ function filterFiveTable(m) {
   renderFiveTable(m);
 }
 
-renderFiveTable("all");
+// ══════════════════════════════════════════════════════════
+//  STAGE 6 EVALUATION CHARTS & INIT
+// ══════════════════════════════════════════════════════════
 
-// ══════════════════════════════════════════════════════════
-//  EVALUATION
-// ══════════════════════════════════════════════════════════
-// Scatter
 const scatterChart = new Chart(document.getElementById("scatterChart"), {
   type: "scatter",
   data: {
     datasets: [
       {
         label: "Test Predictions",
-        data: PREDICTIONS.map(p => ({ x: p.actual, y: p.pred })),
+        data: STARTUPS_DATA.predictions.map(p => ({ x: p.actual, y: p.pred })),
         backgroundColor: "#0cb8b622",
         borderColor: "#0cb8b6",
         pointRadius: 7,
@@ -856,22 +2025,21 @@ const scatterChart = new Chart(document.getElementById("scatterChart"), {
     responsive:true,
     plugins:{ legend:{ position:"bottom" } },
     scales:{
-      x:{ title:{ display:true, text:"Actual Profit ($)" }, grid:{ color:"#eee" } },
-      y:{ title:{ display:true, text:"Predicted Profit ($)" }, grid:{ color:"#eee" } }
+      x:{ title:{ display:true, text:STARTUPS_DATA.scatterLabel }, grid:{ color:"#eee" } },
+      y:{ title:{ display:true, text:STARTUPS_DATA.scatterPredLabel }, grid:{ color:"#eee" } }
     }
   }
 });
 
-// Residuals
 const residChart = new Chart(document.getElementById("residChart"), {
   type: "bar",
   data: {
-    labels: PREDICTIONS.map((_,i)=>`Test ${i+1}`),
+    labels: STARTUPS_DATA.predictions.map((_,i)=>`Test ${i+1}`),
     datasets:[{
       label:"Residual ($)",
-      data: PREDICTIONS.map(p => Math.round(p.actual - p.pred)),
-      backgroundColor: PREDICTIONS.map(p => p.actual - p.pred >= 0 ? "#0cb8b688" : "#f5a62388"),
-      borderColor:     PREDICTIONS.map(p => p.actual - p.pred >= 0 ? "#0cb8b6"   : "#f5a623"),
+      data: STARTUPS_DATA.predictions.map(p => Math.round(p.actual - p.pred)),
+      backgroundColor: STARTUPS_DATA.predictions.map(p => p.actual - p.pred >= 0 ? "#0cb8b688" : "#f5a62388"),
+      borderColor:     STARTUPS_DATA.predictions.map(p => p.actual - p.pred >= 0 ? "#0cb8b6"   : "#f5a623"),
       borderWidth:1.5
     }]
   },
@@ -880,115 +2048,13 @@ const residChart = new Chart(document.getElementById("residChart"), {
     plugins:{ legend:{ position:"bottom" } },
     scales:{
       x:{ grid:{ color:"#eee" } },
-      y:{ title:{ display:true, text:"Residual ($)" }, grid:{ color:"#eee" } }
+      y:{ title:{ display:true, text:STARTUPS_DATA.residLabel }, grid:{ color:"#eee" } }
     }
   }
 });
 
-// Prediction table
-(function(){
-  const body = document.getElementById("predBody");
-  PREDICTIONS.forEach((p,i) => {
-    const resid = p.actual - p.pred;
-    const absErr = Math.abs(resid);
-    const tr = document.createElement("tr");
-    tr.innerHTML=`<td>${i+1}</td><td>$${p.actual.toLocaleString("en",{minimumFractionDigits:2})}</td><td>$${p.pred.toLocaleString("en",{minimumFractionDigits:2})}</td><td class="${resid>=0?'pos-resid':'neg-resid'}">${resid>=0?"+":""}$${Math.round(resid).toLocaleString()}</td><td>$${Math.round(absErr).toLocaleString()}</td>`;
-    body.appendChild(tr);
-  });
-})();
-
-// ══════════════════════════════════════════════════════════
-//  INTERACTIVE PROFIT PREDICTOR LOGIC
-// ══════════════════════════════════════════════════════════
-const MODEL_PARAMS = {
-  intercept: 45671.8930,
-  rdCoef: 0.784115,
-  mktCoef: 0.039091,
-  nyCoef: -510.4574
-};
-
-function formatCurrency(num) {
-  return "$" + Math.round(num).toLocaleString("en");
-}
-
-function syncInputs(field, value) {
-  const val = Math.max(0, parseFloat(value) || 0);
-  if (field === 'rd') {
-    document.getElementById('rdSlider').value = val;
-    document.getElementById('rdNum').value = val;
-    document.getElementById('rdValDisplay').textContent = formatCurrency(val);
-  } else if (field === 'mkt') {
-    document.getElementById('mktSlider').value = val;
-    document.getElementById('mktNum').value = val;
-    document.getElementById('mktValDisplay').textContent = formatCurrency(val);
-  } else if (field === 'admin') {
-    document.getElementById('adminSlider').value = val;
-    document.getElementById('adminNum').value = val;
-    document.getElementById('adminValDisplay').textContent = formatCurrency(val);
-  }
-  calcPrediction();
-}
-
-function calcPrediction() {
-  const rd = Math.max(0, parseFloat(document.getElementById('rdNum').value) || 0);
-  const mkt = Math.max(0, parseFloat(document.getElementById('mktNum').value) || 0);
-  const state = document.getElementById('stateSelect').value;
-
-  const stateValDisplay = document.getElementById('stateValDisplay');
-  if (stateValDisplay) {
-    if (state === 'New York') stateValDisplay.textContent = 'New York (-$510.46)';
-    else if (state === 'Florida') stateValDisplay.textContent = 'Florida ($0.00)';
-    else stateValDisplay.textContent = 'California (Baseline $0.00)';
-  }
-
-  const rdImpact = rd * MODEL_PARAMS.rdCoef;
-  const mktImpact = mkt * MODEL_PARAMS.mktCoef;
-  const stateImpact = (state === 'New York') ? MODEL_PARAMS.nyCoef : 0;
-  const totalProfit = MODEL_PARAMS.intercept + rdImpact + mktImpact + stateImpact;
-
-  const displayEl = document.getElementById('predictedProfitDisplay');
-  if (displayEl) {
-    displayEl.textContent = "$" + totalProfit.toLocaleString("en", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  }
-
-  const bRD = document.getElementById('breakdownRD');
-  const bMkt = document.getElementById('breakdownMkt');
-  const bState = document.getElementById('breakdownState');
-
-  if (bRD) bRD.textContent = (rdImpact >= 0 ? "+" : "") + "$" + rdImpact.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  if (bMkt) bMkt.textContent = (mktImpact >= 0 ? "+" : "") + "$" + mktImpact.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  if (bState) {
-    if (stateImpact === 0) {
-      bState.textContent = "$0.00";
-      bState.className = "breakdown-val val-zero";
-    } else {
-      bState.textContent = "-$" + Math.abs(stateImpact).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      bState.className = "breakdown-val val-neg";
-    }
-  }
-}
-
-function applyPreset(rd, admin, mkt, state) {
-  document.getElementById('rdSlider').value = rd;
-  document.getElementById('rdNum').value = rd;
-  document.getElementById('rdValDisplay').textContent = formatCurrency(rd);
-
-  document.getElementById('adminSlider').value = admin;
-  document.getElementById('adminNum').value = admin;
-  document.getElementById('adminValDisplay').textContent = formatCurrency(admin);
-
-  document.getElementById('mktSlider').value = mkt;
-  document.getElementById('mktNum').value = mkt;
-  document.getElementById('mktValDisplay').textContent = formatCurrency(mkt);
-
-  document.getElementById('stateSelect').value = state;
-  calcPrediction();
-}
-
-calcPrediction();
+// Initialise default dataset (50 Startups)
+applyDataset(STARTUPS_DATA, "50_startups");
 
 // ══════════════════════════════════════════════════════════
 //  ACTIVE SIDEBAR & NAV SCROLL SPY

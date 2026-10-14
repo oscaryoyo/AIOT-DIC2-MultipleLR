@@ -239,6 +239,51 @@ a:hover { text-decoration:underline; }
 .tab-btn:hover, .pill-btn:hover { border-color:var(--teal); color:var(--teal); }
 .tab-btn.active, .pill-btn.active { background:var(--teal); border-color:var(--teal); color:#fff; }
 
+/* ── Dataset & Problem Control Panel ─────────────────── */
+.dataset-control-panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--teal);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+.control-header {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
+}
+.control-title {
+  font-size: 15px; font-weight: 700; color: var(--dark);
+  display: flex; align-items: center; gap: 8px;
+}
+.control-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: end;
+}
+.control-group { display: flex; flex-direction: column; gap: 6px; }
+.control-group label { font-size: 13px; font-weight: 600; color: var(--dark); }
+.custom-config-panel {
+  margin-top: 14px; padding-top: 14px;
+  border-top: 1px dashed var(--border);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.feature-checkbox-grid {
+  display: flex; flex-wrap: wrap; gap: 8px; max-height: 120px;
+  overflow-y: auto; padding: 6px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 6px;
+}
+.feature-checkbox-label {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12.5px; background: var(--white);
+  padding: 4px 10px; border-radius: 14px; border: 1px solid var(--border);
+  cursor: pointer; user-select: none;
+}
+.feature-checkbox-label:hover { border-color: var(--teal); color: var(--teal); }
+.feature-checkbox-label input { accent-color: var(--teal); }
+@media (max-width: 800px) {
+  .control-row { grid-template-columns: 1fr; }
+}
+
 /* ── Info Box ───────────────────────────────────────── */
 .info-box {
   background:var(--teal-light); border-left:4px solid var(--teal);
