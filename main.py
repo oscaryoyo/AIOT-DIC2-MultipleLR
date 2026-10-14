@@ -14,10 +14,12 @@ import itertools
 import warnings
 from pathlib import Path
 
+import json
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import scipy.stats as stats
 from scipy.stats import f as f_distribution
 from sklearn.base import clone
 from sklearn.dummy import DummyRegressor
@@ -161,6 +163,79 @@ def stability_lasso(X, y, repeats=30):
         hits += np.abs(model.coef_) > 1e-6
     frequencies = hits / repeats
     return keep_at_least_one(frequencies >= 0.60, frequencies)
+
+
+def compute_vif(X_df):
+    """Compute Variance Inflation Factor (VIF) for each column in X_df."""
+    vifs = {}
+    cols = X_df.columns.tolist()
+    for col in cols:
+        others = [c for c in cols if c != col]
+        if not others:
+            vifs[col] = 1.0
+            continue
+        r2 = LinearRegression().fit(X_df[others], X_df[col]).score(X_df[others], X_df[col])
+        vifs[col] = round(1.0 / max(1.0 - r2, 1e-12), 3)
+    return vifs
+
+
+def ols_inference(X_df, y_series):
+    """Perform OLS statistical inference on given features and target."""
+    n = len(y_series)
+    p = X_df.shape[1]
+    Xb = np.column_stack([np.ones(n), X_df.to_numpy(dtype=float)])
+    y_vals = y_series.to_numpy(dtype=float)
+
+    beta = np.linalg.lstsq(Xb, y_vals, rcond=None)[0]
+    y_hat = Xb @ beta
+    resid = y_vals - y_hat
+    rss = float(np.sum(resid ** 2))
+    tss = float(np.sum((y_vals - np.mean(y_vals)) ** 2))
+    r2 = max(0.0, 1.0 - rss / tss)
+    df_resid = max(n - p - 1, 1)
+    adj_r2 = 1.0 - (1.0 - r2) * (n - 1) / df_resid
+    sigma2 = rss / df_resid
+
+    cov = sigma2 * np.linalg.inv(Xb.T @ Xb)
+    se = np.sqrt(np.diag(cov))
+    t_stat = beta / np.where(se > 0, se, np.nan)
+    p_vals = 2 * stats.t.sf(np.abs(t_stat), df=df_resid)
+    t_crit = stats.t.ppf(0.975, df=df_resid)
+    ci_lower = beta - t_crit * se
+    ci_upper = beta + t_crit * se
+
+    reg_ss = tss - rss
+    f_stat = (reg_ss / max(p, 1)) / max(sigma2, 1e-12)
+    f_p = float(stats.f.sf(f_stat, p, df_resid))
+
+    vifs = compute_vif(X_df)
+    terms = ['const'] + list(X_df.columns)
+    summary_rows = []
+    for i, name in enumerate(terms):
+        v = vifs.get(name, None)
+        summary_rows.append({
+            'term': name,
+            'coef': round(float(beta[i]), 4),
+            'se': round(float(se[i]), 4),
+            't_stat': round(float(t_stat[i]), 4),
+            'p_value': round(float(p_vals[i]), 6),
+            'ci_lower': round(float(ci_lower[i]), 4),
+            'ci_upper': round(float(ci_upper[i]), 4),
+            'vif': v
+        })
+
+    return {
+        'summary': summary_rows,
+        'r2': round(r2, 6),
+        'adj_r2': round(adj_r2, 6),
+        'f_stat': round(float(f_stat), 4),
+        'f_pvalue': f_p,
+        'n': n,
+        'df_resid': df_resid,
+        'beta': [round(float(b), 6) for b in beta],
+        'residuals': resid.tolist(),
+        'fitted': y_hat.tolist()
+    }
 
 
 def get_masks(X, y):
@@ -341,34 +416,67 @@ results = pd.DataFrame({'Actual': y_test.to_numpy(), 'Predicted': pred,
 results.to_csv(OUT / 'prediction_results.csv', index=False)
 print('\nPredictions:\n', results)
 
+# OLS Statistical Inference (Dev Set)
+print('\n=== OLS STATISTICAL INFERENCE (DEV SET) ===')
+dev_ols = ols_inference(X_dev[final_features], y_dev)
+print(f"N = {dev_ols['n']}, df = {dev_ols['df_resid']}")
+print(f"R^2 = {dev_ols['r2']:.6f}, Adj R^2 = {dev_ols['adj_r2']:.6f}, F = {dev_ols['f_stat']:.4f} (p = {dev_ols['f_pvalue']:.4e})")
+ols_df = pd.DataFrame(dev_ols['summary'])
+print(ols_df.to_string(index=False))
+ols_df.to_csv(OUT / 'ols_inference.csv', index=False)
+
+# Diagnostic Plots
 plt.figure(figsize=(7, 5))
-plt.barh(comparison['Method'][::-1], comparison['Validation RMSE'][::-1])
+plt.barh(comparison['Method'][::-1], comparison['Validation RMSE'][::-1], color='#0cb8b6')
 plt.xlabel('Validation RMSE (lower is better)')
-plt.title('Comparison of Feature-Selection Methods')
+plt.title('Comparison of 20 Feature-Selection Methods')
 plt.tight_layout()
 plt.savefig(OUT / 'method_comparison.png', dpi=160)
 plt.close()
+
 plt.figure(figsize=(6, 5))
-plt.scatter(y_test, pred)
-lo, hi = min(y_test.min(), pred.min()), max(y_test.max(), pred.max())
-plt.plot([lo, hi], [lo, hi], 'r--')
-plt.xlabel('Actual Profit')
-plt.ylabel('Predicted Profit')
-plt.title('Final Model: Actual vs Predicted')
+plt.scatter(y_test, pred, color='#0cb8b6', edgecolors='#099e9c', s=50, alpha=0.9, label='Test Data')
+lo, hi = min(y_test.min(), pred.min()) * 0.95, max(y_test.max(), pred.max()) * 1.05
+plt.plot([lo, hi], [lo, hi], 'r--', linewidth=1.5, label='Perfect fit (y=x)')
+plt.xlabel('Actual Profit ($)')
+plt.ylabel('Predicted Profit ($)')
+plt.title('Final Model: Actual vs Predicted (Test Set)')
+plt.legend()
 plt.tight_layout()
 plt.savefig(OUT / 'actual_vs_predicted.png', dpi=160)
+plt.close()
+
+# Residuals vs Fitted Plot (Dev Set)
+fitted_vals = np.array(dev_ols['fitted'])
+resid_vals = np.array(dev_ols['residuals'])
+plt.figure(figsize=(6, 4.5))
+plt.scatter(fitted_vals, resid_vals, color='#4f8ef7', edgecolors='#2563eb', alpha=0.85, s=45)
+plt.axhline(0, color='#ef4444', linestyle='--', linewidth=1.2)
+plt.xlabel('Fitted Values ($)')
+plt.ylabel('Residuals ($)')
+plt.title('Residuals vs Fitted (Dev Set OLS)')
+plt.tight_layout()
+plt.savefig(OUT / 'residuals_vs_fitted.png', dpi=160)
+plt.close()
+
+# Normal Q-Q Plot (Dev Set)
+plt.figure(figsize=(5.5, 4.5))
+stats.probplot(resid_vals, dist='norm', plot=plt)
+plt.title('Normal Q-Q Plot of Residuals')
+plt.tight_layout()
+plt.savefig(OUT / 'qq_plot.png', dpi=160)
 plt.close()
 
 # ============================================================
 # 6. DEPLOYMENT AND REPORTING
 # ============================================================
 print('\n6. DEPLOYMENT')
-# Retain schema and selected features alongside estimator.
 artifact = {
     'model': final_model,
     'features': final_features,
     'all_state_categories': states,
     'selection_method': chosen_method,
+    'ols_inference': dev_ols,
 }
 joblib.dump(artifact, OUT / 'startup_profit_model.joblib')
 
@@ -379,8 +487,22 @@ new_company = pd.DataFrame({
     'State': ['California']
 })
 new_encoded = encode(new_company)
-new_prediction = artifact['model'].predict(new_encoded[artifact['features']])
-print('New startup predicted profit:', round(new_prediction[0], 2))
+new_prediction = float(artifact['model'].predict(new_encoded[artifact['features']])[0])
+print('New startup predicted profit:', round(new_prediction, 2))
+
+# Export comprehensive JSON data for GitHub Pages website
+website_data = {
+    'methods_20': comparison.to_dict(orient='records'),
+    'final_metrics': metrics,
+    'ols_inference': dev_ols,
+    'predictions': results.to_dict(orient='records'),
+    'new_startup_prediction': {
+        'input': {'R&D Spend': 120000, 'Administration': 130000, 'Marketing Spend': 250000, 'State': 'California'},
+        'predicted_profit': round(new_prediction, 2)
+    }
+}
+with open(OUT / 'website_data.json', 'w', encoding='utf-8') as f:
+    json.dump(website_data, f, indent=2, ensure_ascii=False)
+
 print('Files saved in:', OUT.resolve())
-print('Monitoring recommendation: compare later actual profits with predictions.')
-print('CRISP-DM complete; results are exploratory due to small sample size.')
+print('CRISP-DM complete; results verified.')

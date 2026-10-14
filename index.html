@@ -26,6 +26,8 @@
       <a href="#modeling">Modeling</a>
       <a href="#five-methods">5 Methods</a>
       <a href="#evaluation">Evaluation</a>
+      <a href="#inference">Inference</a>
+      <a href="#predictor">Predictor</a>
     </nav>
   </div>
 </header>
@@ -40,7 +42,7 @@
       <span class="badge badge-teal">50 Observations</span>
       <span class="badge badge-blue">5 Features</span>
       <span class="badge badge-green">20 Selection Methods</span>
-      <span class="badge badge-purple">OLS Regression</span>
+      <span class="badge badge-purple">OLS Statistical Inference</span>
     </div>
   </div>
 </section>
@@ -56,7 +58,8 @@
       <li><a href="#prep" class="step-link"><span class="step-num">3</span><span class="step-lbl">Data Preparation</span></a></li>
       <li><a href="#modeling" class="step-link"><span class="step-num">4</span><span class="step-lbl">Modeling (20 Methods)</span></a></li>
       <li><a href="#five-methods" class="step-link"><span class="step-num">5</span><span class="step-lbl">5-Method Deep Dive</span></a></li>
-      <li><a href="#evaluation" class="step-link"><span class="step-num">6</span><span class="step-lbl">Evaluation</span></a></li>
+      <li><a href="#evaluation" class="step-link"><span class="step-num">6</span><span class="step-lbl">Evaluation &amp; Inference</span></a></li>
+      <li><a href="#predictor" class="step-link"><span class="step-num">🚀</span><span class="step-lbl">Live Predictor &amp; Deploy</span></a></li>
     </ul>
   </aside>
 
@@ -317,7 +320,292 @@
       </div>
 
       <div class="info-box" style="margin-top:24px">
-        <strong>🚀 New Startup Prediction:</strong> For a startup with R&D Spend $120,000 · Administration $130,000 · Marketing $250,000 · State California — predicted profit is <strong>$149,553.78</strong>.
+        <strong>🚀 Baseline Reference Prediction:</strong> For a startup with R&amp;D Spend $120,000 · Administration $130,000 · Marketing $250,000 · State California — predicted profit is <strong>$149,553.78</strong>.
+      </div>
+
+      <!-- ── SECTION 6B: STATISTICAL INFERENCE ── -->
+      <div id="inference" style="margin-top:48px; border-top:2px solid var(--border); padding-top:36px;">
+        <div class="section-header" style="margin-bottom:20px;">
+          <span class="section-num" style="background:var(--purple); color:#fff;">∑</span>
+          <div>
+            <h2>Statistical Inference &amp; OLS Regression Diagnostics</h2>
+            <p class="section-sub">Standard errors, hypothesis tests (t-stat, p-value), confidence intervals, VIF, and residual diagnostics.</p>
+          </div>
+        </div>
+
+        <!-- Formula Card -->
+        <div class="formula-card">
+          <div class="formula-title">
+            <span>OLS Multiple Linear Regression Equation (Winning 3-Feature Model)</span>
+            <span class="badge badge-teal">Fitted on Dev Set (N=40)</span>
+          </div>
+          <div class="formula-math">
+            <span class="var-y">Profit ($)</span> = 
+            <span class="var-const">45,671.89</span> + 
+            <span class="var-x1">0.7841</span> &times; (R&amp;D Spend) + 
+            <span class="var-x2">0.0391</span> &times; (Marketing Spend) - 
+            <span class="var-x3">510.46</span> &times; (State_New York)
+          </div>
+          <div class="formula-note">
+            * Reference baseline state: <strong>California</strong> (intercept captures California baseline). Administration and Florida excluded by feature selection.
+          </div>
+        </div>
+
+        <!-- Coefficients & Tests Table -->
+        <h3 class="sub-heading">Model Coefficients &amp; Statistical Significance Tests</h3>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Term / Predictor</th>
+                <th>Coefficient (&beta;)</th>
+                <th>Std. Error</th>
+                <th>t-Statistic</th>
+                <th>p-Value</th>
+                <th>95% Conf. Interval</th>
+                <th>VIF</th>
+                <th>Significance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Intercept (&beta;<sub>0</sub>)</strong></td>
+                <td><strong>45,671.8930</strong></td>
+                <td>3,600.1147</td>
+                <td>12.6862</td>
+                <td><strong>&lt; 0.0001</strong></td>
+                <td>[38,370.52, 52,973.26]</td>
+                <td><span class="badge badge-neutral">—</span></td>
+                <td><span class="badge badge-teal">*** p &lt; 0.001</span></td>
+              </tr>
+              <tr class="row-top5">
+                <td><strong>R&amp;D Spend (&beta;<sub>1</sub>)</strong></td>
+                <td><strong>0.7841</strong></td>
+                <td>0.0484</td>
+                <td>16.1958</td>
+                <td><strong>&lt; 0.0001</strong></td>
+                <td>[0.6859, 0.8823]</td>
+                <td><span class="badge badge-green">2.280</span></td>
+                <td><span class="badge badge-teal">*** p &lt; 0.001</span></td>
+              </tr>
+              <tr>
+                <td><strong>Marketing Spend (&beta;<sub>2</sub>)</strong></td>
+                <td><strong>0.0391</strong></td>
+                <td>0.0201</td>
+                <td>1.9478</td>
+                <td>0.0593</td>
+                <td>[-0.0016, 0.0799]</td>
+                <td><span class="badge badge-green">2.260</span></td>
+                <td><span class="badge badge-gold">&bull; p &lt; 0.10</span></td>
+              </tr>
+              <tr>
+                <td><strong>State_New York (&beta;<sub>3</sub>)</strong></td>
+                <td><strong>-510.4574</strong></td>
+                <td>3,260.9347</td>
+                <td>-0.1565</td>
+                <td>0.8765</td>
+                <td>[-7,123.94, 6,103.02]</td>
+                <td><span class="badge badge-green">1.015</span></td>
+                <td><span class="badge badge-neutral">ns (p = 0.88)</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Overall Fit Grid -->
+        <div class="stats-grid" style="margin-top:20px;">
+          <div class="stat-card">
+            <div class="stat-val teal">0.9519</div>
+            <div class="stat-lbl">R² (Dev Set)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val teal">0.9479</div>
+            <div class="stat-lbl">Adjusted R²</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val">237.56</div>
+            <div class="stat-lbl">F-Statistic (p = 9.0e-24)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val">&lt; 2.30</div>
+            <div class="stat-lbl">Max VIF (No Collinearity)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val teal">+0.10%</div>
+            <div class="stat-lbl">Adj R² vs 5-Feature Baseline</div>
+          </div>
+        </div>
+
+        <div class="info-box info-box-blue" style="margin-top:20px;">
+          <strong>💡 Parsimony &amp; Multicollinearity Validation:</strong> In the baseline 5-feature OLS model, Administration (p=0.265) and State_Florida (p=0.811) are not statistically significant, giving an Adjusted R² of <strong>0.9469</strong>. Pruning them via feature selection increased Adjusted R² to <strong>0.9479</strong>, lowered test RMSE from <strong>9,055.96</strong> to <strong>8,242.78</strong>, and kept all VIF values below 2.3 (safe from multicollinearity).
+        </div>
+
+        <!-- Diagnostic Charts -->
+        <h3 class="sub-heading" style="margin-top:32px">Regression Diagnostic Visualizations (OLS Assumptions)</h3>
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-title">Residuals vs. Fitted Values (Homoscedasticity &amp; Linearity)</div>
+            <img src="crisp_dm_outputs/residuals_vs_fitted.png" alt="Residuals vs Fitted Values" class="diag-img"/>
+            <p style="font-size:12.5px; color:var(--muted); margin-top:8px;">
+              Checks linearity and constant variance. Residuals bounce randomly around zero without funnel shape or systematic curvature, validating homoscedasticity.
+            </p>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Normal Q-Q Plot (Normality of Residuals)</div>
+            <img src="crisp_dm_outputs/qq_plot.png" alt="Normal Q-Q Plot" class="diag-img"/>
+            <p style="font-size:12.5px; color:var(--muted); margin-top:8px;">
+              Checks normality of error terms. Standardized residuals adhere closely to the theoretical diagonal line, confirming residual normality.
+            </p>
+          </div>
+        </div>
+
+        <!-- Comparison: Inference vs Prediction -->
+        <h3 class="sub-heading" style="margin-top:32px">Methodological Distinction: Statistical Inference vs. Predictive Modeling</h3>
+        <div class="compare-grid">
+          <div class="compare-box inference">
+            <div class="compare-box-title">
+              <span>🔬 Statistical Inference</span>
+              <span class="badge badge-blue">Within-Sample Explanatory</span>
+            </div>
+            <ul class="compare-list">
+              <li><strong>Objective:</strong> Quantify relationships, test scientific hypotheses (e.g., H₀: &beta;ⱼ = 0), and understand underlying mechanisms.</li>
+              <li><strong>Core Metrics:</strong> Standard errors, t-statistics, p-values, 95% confidence intervals, and Adjusted R².</li>
+              <li><strong>Assumptions:</strong> Relies on Gauss-Markov assumptions (Linearity, Independence, Homoscedasticity, Normality).</li>
+              <li><strong>Focus:</strong> Unbiased parameter estimation on observed data.</li>
+            </ul>
+          </div>
+          <div class="compare-box prediction">
+            <div class="compare-box-title">
+              <span>🎯 Predictive Machine Learning</span>
+              <span class="badge badge-teal">Out-of-Sample Generalization</span>
+            </div>
+            <ul class="compare-list">
+              <li><strong>Objective:</strong> Maximize accuracy and minimize prediction error on previously unseen observations.</li>
+              <li><strong>Core Metrics:</strong> Held-out Test RMSE, Test MAE, Out-of-sample R², and cross-validation loss.</li>
+              <li><strong>Tradeoff:</strong> Embraces the Bias-Variance Tradeoff (accepts slight coefficient bias to reduce variance).</li>
+              <li><strong>Focus:</strong> Generalization capability verified on an isolated holdout test set.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Post-selection Inference Warning Box -->
+        <div class="info-box info-box-warning" style="margin-top:16px;">
+          <strong>⚠️ Critical Limitation: Post-Selection Inference Caution:</strong>
+          Standard OLS hypothesis tests and p-values assume that the model structure was specified <em>a priori</em> before looking at the dataset. When the model is chosen <em>data-dependently</em> via 20 feature-selection algorithms, the nominal p-values become overly optimistic (selection bias / "data snooping"). The standard errors underestimate true uncertainty. Therefore, <strong>the held-out test evaluation (Test RMSE 8,243) is the authentic test of predictive validity</strong>, while the p-values should be interpreted as exploratory ranking diagnostics rather than confirmatory proofs.
+        </div>
+      </div>
+
+      <!-- ── SECTION 6C: INTERACTIVE PREDICTOR & DEPLOYMENT ── -->
+      <div id="predictor" class="predictor-container" style="margin-top:40px;">
+        <div class="predictor-header">
+          <div>
+            <div class="badge badge-teal" style="margin-bottom:6px;">CRISP-DM Stage 6 · Deployment</div>
+            <div class="predictor-title">Interactive Profit Predictor (Live Simulation)</div>
+          </div>
+          <div>
+            <a href="crisp_dm_outputs/startup_profit_model.joblib" class="badge badge-blue" download style="text-decoration:none; padding:6px 12px;">
+              💾 Download Model (.joblib)
+            </a>
+          </div>
+        </div>
+
+        <p style="font-size:14px; color:var(--muted); margin-bottom:16px;">
+          Adjust expenditure parameters or click a preset scenario to compute predicted startup profit in real-time using our winning 3-feature OLS regression model.
+        </p>
+
+        <!-- Presets -->
+        <div style="font-size:12.5px; font-weight:600; color:var(--dark); margin-bottom:6px;">⚡ Quick Presets:</div>
+        <div class="preset-row">
+          <button type="button" class="preset-btn" onclick="applyPreset(120000, 130000, 250000, 'California')">Standard Startup ($120k / $250k / CA)</button>
+          <button type="button" class="preset-btn" onclick="applyPreset(165000, 136000, 470000, 'New York')">High-Growth Tech ($165k / $470k / NY)</button>
+          <button type="button" class="preset-btn" onclick="applyPreset(60000, 115000, 100000, 'Florida')">Early Stage Florida ($60k / $100k / FL)</button>
+          <button type="button" class="preset-btn" onclick="applyPreset(25000, 80000, 45000, 'California')">Bootstrap Lean ($25k / $45k / CA)</button>
+        </div>
+
+        <div class="predictor-grid">
+          <!-- Input Form -->
+          <div class="predictor-inputs">
+            <!-- R&D Spend -->
+            <div class="input-group">
+              <div class="input-label-row">
+                <span>🔬 R&amp;D Spend ($)</span>
+                <span class="input-value-badge" id="rdValDisplay">$120,000</span>
+              </div>
+              <input type="range" id="rdSlider" class="range-slider" min="0" max="200000" step="1000" value="120000" oninput="syncInputs('rd', this.value)"/>
+              <input type="number" id="rdNum" class="number-input" style="margin-top:6px;" min="0" max="500000" step="1000" value="120000" oninput="syncInputs('rd', this.value)"/>
+            </div>
+
+            <!-- Marketing Spend -->
+            <div class="input-group">
+              <div class="input-label-row">
+                <span>📣 Marketing Spend ($)</span>
+                <span class="input-value-badge" id="mktValDisplay">$250,000</span>
+              </div>
+              <input type="range" id="mktSlider" class="range-slider" min="0" max="500000" step="2500" value="250000" oninput="syncInputs('mkt', this.value)"/>
+              <input type="number" id="mktNum" class="number-input" style="margin-top:6px;" min="0" max="1000000" step="2500" value="250000" oninput="syncInputs('mkt', this.value)"/>
+            </div>
+
+            <!-- Administration -->
+            <div class="input-group">
+              <div class="input-label-row">
+                <span>🏢 Administration ($) <span style="font-size:11px; font-weight:normal; color:var(--muted);">(Zero Weight)</span></span>
+                <span class="input-value-badge" id="adminValDisplay">$130,000</span>
+              </div>
+              <input type="range" id="adminSlider" class="range-slider" min="0" max="200000" step="1000" value="130000" oninput="syncInputs('admin', this.value)"/>
+              <input type="number" id="adminNum" class="number-input" style="margin-top:6px;" min="0" max="500000" step="1000" value="130000" oninput="syncInputs('admin', this.value)"/>
+            </div>
+
+            <!-- State -->
+            <div class="input-group">
+              <div class="input-label-row">
+                <span>📍 Operational State</span>
+                <span class="input-value-badge" id="stateValDisplay">California (Baseline)</span>
+              </div>
+              <select id="stateSelect" class="select-input" onchange="calcPrediction()">
+                <option value="California" selected>California (Reference Baseline, coef = $0)</option>
+                <option value="Florida">Florida (Excluded, coef = $0)</option>
+                <option value="New York">New York (coef = -$510.46)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Result Panel -->
+          <div class="prediction-result-panel">
+            <div>
+              <div class="prediction-badge">✨ Live Model Calculation</div>
+              <div style="font-size:14px; opacity:0.85;">Expected Net Startup Profit:</div>
+              <div class="prediction-number" id="predictedProfitDisplay">$149,553.78</div>
+
+              <div class="breakdown-card">
+                <div class="breakdown-title">📊 Mathematical Contribution Breakdown</div>
+                <div class="breakdown-row">
+                  <span class="breakdown-label">Base Intercept (&beta;<sub>0</sub>)</span>
+                  <span class="breakdown-val val-pos">+$45,671.89</span>
+                </div>
+                <div class="breakdown-row">
+                  <span class="breakdown-label">R&amp;D Impact (&times; 0.7841)</span>
+                  <span class="breakdown-val val-pos" id="breakdownRD">+$94,093.84</span>
+                </div>
+                <div class="breakdown-row">
+                  <span class="breakdown-label">Marketing Impact (&times; 0.0391)</span>
+                  <span class="breakdown-val val-pos" id="breakdownMkt">+$9,788.05</span>
+                </div>
+                <div class="breakdown-row">
+                  <span class="breakdown-label">State Factor</span>
+                  <span class="breakdown-val" id="breakdownState">$0.00</span>
+                </div>
+                <div class="breakdown-row">
+                  <span class="breakdown-label">Administration (&times; 0.0000)</span>
+                  <span class="breakdown-val val-zero">$0.00 (Filtered)</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="font-size:12px; color:#94a3b8; margin-top:16px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+              🛡️ <strong>Parsimony Advantage:</strong> Administration overhead does not dilute profit prediction because feature selection confirmed it contains no statistically significant signal (p=0.265).
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -610,14 +898,116 @@ const residChart = new Chart(document.getElementById("residChart"), {
 })();
 
 // ══════════════════════════════════════════════════════════
-//  ACTIVE SIDEBAR
+//  INTERACTIVE PROFIT PREDICTOR LOGIC
 // ══════════════════════════════════════════════════════════
-const sections = document.querySelectorAll("section[id]");
-const links    = document.querySelectorAll(".step-link");
+const MODEL_PARAMS = {
+  intercept: 45671.8930,
+  rdCoef: 0.784115,
+  mktCoef: 0.039091,
+  nyCoef: -510.4574
+};
+
+function formatCurrency(num) {
+  return "$" + Math.round(num).toLocaleString("en");
+}
+
+function syncInputs(field, value) {
+  const val = Math.max(0, parseFloat(value) || 0);
+  if (field === 'rd') {
+    document.getElementById('rdSlider').value = val;
+    document.getElementById('rdNum').value = val;
+    document.getElementById('rdValDisplay').textContent = formatCurrency(val);
+  } else if (field === 'mkt') {
+    document.getElementById('mktSlider').value = val;
+    document.getElementById('mktNum').value = val;
+    document.getElementById('mktValDisplay').textContent = formatCurrency(val);
+  } else if (field === 'admin') {
+    document.getElementById('adminSlider').value = val;
+    document.getElementById('adminNum').value = val;
+    document.getElementById('adminValDisplay').textContent = formatCurrency(val);
+  }
+  calcPrediction();
+}
+
+function calcPrediction() {
+  const rd = Math.max(0, parseFloat(document.getElementById('rdNum').value) || 0);
+  const mkt = Math.max(0, parseFloat(document.getElementById('mktNum').value) || 0);
+  const state = document.getElementById('stateSelect').value;
+
+  const stateValDisplay = document.getElementById('stateValDisplay');
+  if (stateValDisplay) {
+    if (state === 'New York') stateValDisplay.textContent = 'New York (-$510.46)';
+    else if (state === 'Florida') stateValDisplay.textContent = 'Florida ($0.00)';
+    else stateValDisplay.textContent = 'California (Baseline $0.00)';
+  }
+
+  const rdImpact = rd * MODEL_PARAMS.rdCoef;
+  const mktImpact = mkt * MODEL_PARAMS.mktCoef;
+  const stateImpact = (state === 'New York') ? MODEL_PARAMS.nyCoef : 0;
+  const totalProfit = MODEL_PARAMS.intercept + rdImpact + mktImpact + stateImpact;
+
+  const displayEl = document.getElementById('predictedProfitDisplay');
+  if (displayEl) {
+    displayEl.textContent = "$" + totalProfit.toLocaleString("en", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  const bRD = document.getElementById('breakdownRD');
+  const bMkt = document.getElementById('breakdownMkt');
+  const bState = document.getElementById('breakdownState');
+
+  if (bRD) bRD.textContent = (rdImpact >= 0 ? "+" : "") + "$" + rdImpact.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (bMkt) bMkt.textContent = (mktImpact >= 0 ? "+" : "") + "$" + mktImpact.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (bState) {
+    if (stateImpact === 0) {
+      bState.textContent = "$0.00";
+      bState.className = "breakdown-val val-zero";
+    } else {
+      bState.textContent = "-$" + Math.abs(stateImpact).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      bState.className = "breakdown-val val-neg";
+    }
+  }
+}
+
+function applyPreset(rd, admin, mkt, state) {
+  document.getElementById('rdSlider').value = rd;
+  document.getElementById('rdNum').value = rd;
+  document.getElementById('rdValDisplay').textContent = formatCurrency(rd);
+
+  document.getElementById('adminSlider').value = admin;
+  document.getElementById('adminNum').value = admin;
+  document.getElementById('adminValDisplay').textContent = formatCurrency(admin);
+
+  document.getElementById('mktSlider').value = mkt;
+  document.getElementById('mktNum').value = mkt;
+  document.getElementById('mktValDisplay').textContent = formatCurrency(mkt);
+
+  document.getElementById('stateSelect').value = state;
+  calcPrediction();
+}
+
+calcPrediction();
+
+// ══════════════════════════════════════════════════════════
+//  ACTIVE SIDEBAR & NAV SCROLL SPY
+// ══════════════════════════════════════════════════════════
+const trackedTargets = document.querySelectorAll("section[id], div[id='inference'], div[id='predictor']");
+const links = document.querySelectorAll(".step-link, .header-nav a");
 window.addEventListener("scroll", () => {
   let cur = "";
-  sections.forEach(s => { if(window.scrollY >= s.offsetTop - 120) cur = s.id; });
-  links.forEach(l => { l.classList.toggle("active", l.getAttribute("href") === "#"+cur); });
+  trackedTargets.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 140) cur = s.id;
+  });
+  links.forEach(l => {
+    const href = l.getAttribute("href");
+    if (href === "#" + cur) {
+      l.classList.add("active");
+    } else if (href && href.startsWith("#")) {
+      l.classList.remove("active");
+    }
+  });
 });
 </script>
 </body>

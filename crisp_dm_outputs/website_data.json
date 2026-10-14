@@ -1,0 +1,347 @@
+{
+  "methods_20": [
+    {
+      "Method": "13 Permutation importance",
+      "Feature count": 3,
+      "Validation RMSE": 9777.97659724717,
+      "Validation MAE": 8566.254920305884,
+      "Selected features": "R&D Spend, Administration, Marketing Spend"
+    },
+    {
+      "Method": "15 Random forest importance",
+      "Feature count": 3,
+      "Validation RMSE": 9777.97659724717,
+      "Validation MAE": 8566.254920305884,
+      "Selected features": "R&D Spend, Administration, Marketing Spend"
+    },
+    {
+      "Method": "16 Gradient boosting importance",
+      "Feature count": 3,
+      "Validation RMSE": 9777.97659724717,
+      "Validation MAE": 8566.254920305884,
+      "Selected features": "R&D Spend, Administration, Marketing Spend"
+    },
+    {
+      "Method": "06 RFECV",
+      "Feature count": 1,
+      "Validation RMSE": 10278.161682278398,
+      "Validation MAE": 8466.180771360414,
+      "Selected features": "R&D Spend"
+    },
+    {
+      "Method": "19 Partial F-test",
+      "Feature count": 1,
+      "Validation RMSE": 10278.161682278398,
+      "Validation MAE": 8466.180771360414,
+      "Selected features": "R&D Spend"
+    },
+    {
+      "Method": "05 F-test SelectKBest",
+      "Feature count": 3,
+      "Validation RMSE": 10812.944496103362,
+      "Validation MAE": 8827.895792875377,
+      "Selected features": "R&D Spend, Marketing Spend, State_Florida"
+    },
+    {
+      "Method": "09 Pearson correlation",
+      "Feature count": 3,
+      "Validation RMSE": 10812.944496103362,
+      "Validation MAE": 8827.895792875377,
+      "Selected features": "R&D Spend, Marketing Spend, State_Florida"
+    },
+    {
+      "Method": "04 Backward SFS",
+      "Feature count": 3,
+      "Validation RMSE": 12744.78663152091,
+      "Validation MAE": 10104.402227027287,
+      "Selected features": "R&D Spend, Marketing Spend, State_New York"
+    },
+    {
+      "Method": "12 Best subset CV",
+      "Feature count": 3,
+      "Validation RMSE": 12744.78663152091,
+      "Validation MAE": 10104.402227027287,
+      "Selected features": "R&D Spend, Marketing Spend, State_New York"
+    },
+    {
+      "Method": "11 Stepwise CV",
+      "Feature count": 3,
+      "Validation RMSE": 12744.78663152091,
+      "Validation MAE": 10104.402227027287,
+      "Selected features": "R&D Spend, Marketing Spend, State_New York"
+    },
+    {
+      "Method": "14 Ridge coefficient ranking",
+      "Feature count": 3,
+      "Validation RMSE": 12744.78663152091,
+      "Validation MAE": 10104.402227027287,
+      "Selected features": "R&D Spend, Marketing Spend, State_New York"
+    },
+    {
+      "Method": "10 Mutual information",
+      "Feature count": 3,
+      "Validation RMSE": 12744.78663152091,
+      "Validation MAE": 10104.402227027287,
+      "Selected features": "R&D Spend, Marketing Spend, State_New York"
+    },
+    {
+      "Method": "01 RFE",
+      "Feature count": 3,
+      "Validation RMSE": 12744.78663152091,
+      "Validation MAE": 10104.402227027287,
+      "Selected features": "R&D Spend, Marketing Spend, State_New York"
+    },
+    {
+      "Method": "03 Forward SFS",
+      "Feature count": 3,
+      "Validation RMSE": 12744.78663152091,
+      "Validation MAE": 10104.402227027287,
+      "Selected features": "R&D Spend, Marketing Spend, State_New York"
+    },
+    {
+      "Method": "02 LassoCV",
+      "Feature count": 4,
+      "Validation RMSE": 12796.243893215675,
+      "Validation MAE": 10107.570752818427,
+      "Selected features": "R&D Spend, Marketing Spend, State_Florida, State_New York"
+    },
+    {
+      "Method": "18 Stability selection (Lasso)",
+      "Feature count": 4,
+      "Validation RMSE": 12796.243893215675,
+      "Validation MAE": 10107.570752818427,
+      "Selected features": "R&D Spend, Marketing Spend, State_Florida, State_New York"
+    },
+    {
+      "Method": "08 VIF elimination",
+      "Feature count": 5,
+      "Validation RMSE": 13279.052926167218,
+      "Validation MAE": 10464.041490823158,
+      "Selected features": "R&D Spend, Administration, Marketing Spend, State_Florida, State_New York"
+    },
+    {
+      "Method": "07 ElasticNetCV",
+      "Feature count": 5,
+      "Validation RMSE": 13279.052926167218,
+      "Validation MAE": 10464.041490823158,
+      "Selected features": "R&D Spend, Administration, Marketing Spend, State_Florida, State_New York"
+    },
+    {
+      "Method": "00 All features (baseline)",
+      "Feature count": 5,
+      "Validation RMSE": 13279.052926167218,
+      "Validation MAE": 10464.041490823158,
+      "Selected features": "R&D Spend, Administration, Marketing Spend, State_Florida, State_New York"
+    }
+  ],
+  "final_metrics": {
+    "Method": "13 Permutation importance",
+    "Features": "R&D Spend, Marketing Spend, State_New York",
+    "Test MAE": 6430.578356776379,
+    "Test MSE": 67943465.80664524,
+    "Test RMSE": 8242.782649484654,
+    "Test R2": 0.9160976403529224,
+    "Baseline Test RMSE": 33776.691540126405
+  },
+  "ols_inference": {
+    "summary": [
+      {
+        "term": "const",
+        "coef": 45671.893,
+        "se": 3600.1147,
+        "t_stat": 12.6862,
+        "p_value": 0.0,
+        "ci_lower": 38370.5219,
+        "ci_upper": 52973.2641,
+        "vif": null
+      },
+      {
+        "term": "R&D Spend",
+        "coef": 0.7841,
+        "se": 0.0484,
+        "t_stat": 16.1958,
+        "p_value": 0.0,
+        "ci_lower": 0.6859,
+        "ci_upper": 0.8823,
+        "vif": 2.28
+      },
+      {
+        "term": "Marketing Spend",
+        "coef": 0.0391,
+        "se": 0.0201,
+        "t_stat": 1.9478,
+        "p_value": 0.059274,
+        "ci_lower": -0.0016,
+        "ci_upper": 0.0799,
+        "vif": 2.26
+      },
+      {
+        "term": "State_New York",
+        "coef": -510.4574,
+        "se": 3260.9347,
+        "t_stat": -0.1565,
+        "p_value": 0.876484,
+        "ci_lower": -7123.9395,
+        "ci_upper": 6103.0247,
+        "vif": 1.015
+      }
+    ],
+    "r2": 0.951916,
+    "adj_r2": 0.947909,
+    "f_stat": 237.561,
+    "f_pvalue": 9.014317501105686e-24,
+    "n": 40,
+    "df_resid": 36,
+    "beta": [
+      45671.892975,
+      0.78413,
+      0.039145,
+      -510.45739
+    ],
+    "residuals": [
+      12532.243197875156,
+      -5248.297267466725,
+      2007.9266023455275,
+      331.1808208549337,
+      9533.411274107959,
+      -104.88290491880616,
+      3817.0259620472643,
+      -8843.242068780222,
+      -3112.162974691746,
+      -15293.060145365002,
+      -4561.0612435440125,
+      9800.748236952524,
+      -2524.7326894776343,
+      6385.121592660769,
+      929.9438537774986,
+      -1022.9335792255588,
+      1029.0409010933508,
+      -10520.300096572755,
+      -809.3592942702671,
+      -5783.211103241076,
+      206.03598465949472,
+      9871.31710950748,
+      14687.03623013696,
+      1245.9587376341806,
+      -7049.216576053703,
+      9091.748391105764,
+      11048.04640921834,
+      7192.077559056896,
+      -1822.4101766709791,
+      3256.7663817964494,
+      11566.417215893336,
+      -5214.480881758864,
+      -4892.934811407584,
+      -32758.801853971818,
+      1317.9273121001024,
+      -4768.164384881442,
+      1495.5041107474244,
+      -17161.567737104953,
+      1192.5836175695586,
+      12952.758288261044
+    ],
+    "fitted": [
+      129053.27680212483,
+      171436.23726746673,
+      87941.21339765447,
+      151880.58917914506,
+      173368.57872589203,
+      156227.39290491882,
+      73981.80403795274,
+      58333.99206878022,
+      45671.89297469175,
+      145210.100145365,
+      154321.021243544,
+      117192.18176304747,
+      111076.77268947763,
+      90327.67840733923,
+      96553.6161462225,
+      193284.76357922555,
+      64171.28909890665,
+      115528.61009657275,
+      97588.27929427027,
+      162774.33110324107,
+      100798.6040153405,
+      134388.08289049251,
+      76021.15376986304,
+      190546.10126236582,
+      118362.2365760537,
+      181958.64160889425,
+      58710.93359078166,
+      89287.4324409431,
+      110556.40017667098,
+      74983.14361820355,
+      134555.53278410668,
+      115566.73088175886,
+      129159.83481140758,
+      47440.20185397182,
+      117156.1026878999,
+      160520.76438488145,
+      70002.98588925258,
+      149764.21773710495,
+      102089.79638243045,
+      68276.30171173895
+    ]
+  },
+  "predictions": [
+    {
+      "Actual": 134307.35,
+      "Predicted": 127696.49199278888,
+      "Residual": 6610.858007211122
+    },
+    {
+      "Actual": 81005.76,
+      "Predicted": 82757.15521141206,
+      "Residual": -1751.395211412062
+    },
+    {
+      "Actual": 99937.59,
+      "Predicted": 97850.96573223772,
+      "Residual": 2086.6242677622795
+    },
+    {
+      "Actual": 64926.08,
+      "Predicted": 46020.275506630445,
+      "Residual": 18905.804493369556
+    },
+    {
+      "Actual": 125370.37,
+      "Predicted": 130446.36919476955,
+      "Residual": -5075.999194769553
+    },
+    {
+      "Actual": 35673.41,
+      "Predicted": 45586.47316132283,
+      "Residual": -9913.063161322825
+    },
+    {
+      "Actual": 105733.54,
+      "Predicted": 109986.92532424374,
+      "Residual": -4253.385324243747
+    },
+    {
+      "Actual": 107404.34,
+      "Predicted": 101777.99690136063,
+      "Residual": 5626.343098639365
+    },
+    {
+      "Actual": 97427.84,
+      "Predicted": 97196.6885893128,
+      "Residual": 231.15141068719095
+    },
+    {
+      "Actual": 122776.86,
+      "Predicted": 112925.70060165391,
+      "Residual": 9851.159398346092
+    }
+  ],
+  "new_startup_prediction": {
+    "input": {
+      "R&D Spend": 120000,
+      "Administration": 130000,
+      "Marketing Spend": 250000,
+      "State": "California"
+    },
+    "predicted_profit": 149553.78
+  }
+}
