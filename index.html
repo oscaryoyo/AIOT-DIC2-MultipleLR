@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>50 Startups – CRISP-DM Profit Prediction Analysis</title>
+  <meta name="description" content="Interactive CRISP-DM analysis of 50 Startups dataset using 20 feature selection methods and multiple linear regression. Test RMSE 8,243 · R² 0.916."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="index.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-icon">📈</span>
+      <span class="brand-text">50 Startups <span class="brand-sub">CRISP-DM Analysis</span></span>
+    </div>
+    <nav class="header-nav">
+      <a href="#business">Business</a>
+      <a href="#data">Data</a>
+      <a href="#prep">Prep</a>
+      <a href="#modeling">Modeling</a>
+      <a href="#five-methods">5 Methods</a>
+      <a href="#evaluation">Evaluation</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════ HERO ════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-label">CRISP-DM · Multiple Linear Regression</div>
+    <h1>50 Startups Profit Prediction</h1>
+    <p class="hero-desc">20 feature-selection methods compared head-to-head on the 50 Startups dataset. The best model achieves <strong>Test RMSE 8,243</strong> and <strong>R² 0.916</strong> — a <strong>75.6 % improvement</strong> over the mean-prediction baseline.</p>
+    <div class="hero-badges">
+      <span class="badge badge-teal">50 Observations</span>
+      <span class="badge badge-blue">5 Features</span>
+      <span class="badge badge-green">20 Selection Methods</span>
+      <span class="badge badge-purple">OLS Regression</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ MAIN ════════════════════════════════ -->
+<div class="page-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <ul class="step-nav">
+      <li><a href="#business" class="step-link active"><span class="step-num">1</span><span class="step-lbl">Business Understanding</span></a></li>
+      <li><a href="#data" class="step-link"><span class="step-num">2</span><span class="step-lbl">Data Understanding</span></a></li>
+      <li><a href="#prep" class="step-link"><span class="step-num">3</span><span class="step-lbl">Data Preparation</span></a></li>
+      <li><a href="#modeling" class="step-link"><span class="step-num">4</span><span class="step-lbl">Modeling (20 Methods)</span></a></li>
+      <li><a href="#five-methods" class="step-link"><span class="step-num">5</span><span class="step-lbl">5-Method Deep Dive</span></a></li>
+      <li><a href="#evaluation" class="step-link"><span class="step-num">6</span><span class="step-lbl">Evaluation</span></a></li>
+    </ul>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- ── STEP 1: BUSINESS UNDERSTANDING ── -->
+    <section id="business" class="section">
+      <div class="section-header">
+        <span class="section-num">1</span>
+        <div>
+          <h2>Business Understanding</h2>
+          <p class="section-sub">Define the objective and success criteria before touching data.</p>
+        </div>
+      </div>
+      <div class="card-row">
+        <div class="card card-accent-teal">
+          <div class="card-icon">🎯</div>
+          <div class="card-title">Goal</div>
+          <div class="card-body">Predict <strong>Profit</strong> from R&D Spend, Administration, Marketing Spend &amp; State using Ordinary Least Squares.</div>
+        </div>
+        <div class="card card-accent-blue">
+          <div class="card-icon">✅</div>
+          <div class="card-title">Success Criterion</div>
+          <div class="card-body">Minimise <strong>Validation RMSE</strong> across 20 feature-selection methods. Beat the mean-prediction baseline by a significant margin.</div>
+        </div>
+        <div class="card card-accent-orange">
+          <div class="card-icon">⚠️</div>
+          <div class="card-title">Limitation</div>
+          <div class="card-body">Only <strong>50 observations</strong> — rankings may be unstable. Results are exploratory, not production-grade.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STEP 2: DATA UNDERSTANDING ── -->
+    <section id="data" class="section">
+      <div class="section-header">
+        <span class="section-num">2</span>
+        <div>
+          <h2>Data Understanding</h2>
+          <p class="section-sub">Explore the raw dataset before any transformation.</p>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-val">50</div><div class="stat-lbl">Observations</div></div>
+        <div class="stat-card"><div class="stat-val">5</div><div class="stat-lbl">Columns</div></div>
+        <div class="stat-card"><div class="stat-val">0</div><div class="stat-lbl">Missing Values</div></div>
+        <div class="stat-card"><div class="stat-val">0</div><div class="stat-lbl">Duplicate Rows</div></div>
+        <div class="stat-card"><div class="stat-val">3</div><div class="stat-lbl">States</div></div>
+      </div>
+
+      <h3 class="sub-heading">Dataset Preview (first 5 rows)</h3>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>R&D Spend</th><th>Administration</th><th>Marketing Spend</th><th>State</th><th>Profit</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>165,349.20</td><td>136,897.80</td><td>471,784.10</td><td>New York</td><td>192,261.83</td></tr>
+            <tr><td>2</td><td>162,597.70</td><td>151,377.59</td><td>443,898.53</td><td>California</td><td>191,792.06</td></tr>
+            <tr><td>3</td><td>153,441.51</td><td>101,145.55</td><td>407,934.54</td><td>Florida</td><td>191,050.39</td></tr>
+            <tr><td>4</td><td>144,372.41</td><td>118,671.85</td><td>383,199.62</td><td>New York</td><td>182,901.99</td></tr>
+            <tr><td>5</td><td>142,107.34</td><td>91,391.77</td><td>366,168.42</td><td>Florida</td><td>166,187.94</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub-heading">Descriptive Statistics</h3>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Statistic</th><th>R&D Spend</th><th>Administration</th><th>Marketing Spend</th><th>Profit</th></tr></thead>
+          <tbody>
+            <tr><td>Mean</td><td>73,721.62</td><td>121,344.64</td><td>211,025.10</td><td>112,012.64</td></tr>
+            <tr><td>Std Dev</td><td>45,902.26</td><td>28,017.80</td><td>122,290.31</td><td>40,306.18</td></tr>
+            <tr><td>Min</td><td>0.00</td><td>51,283.14</td><td>0.00</td><td>14,681.40</td></tr>
+            <tr><td>Median</td><td>73,051.08</td><td>122,699.80</td><td>212,716.24</td><td>107,978.19</td></tr>
+            <tr><td>Max</td><td>165,349.20</td><td>182,645.56</td><td>471,784.10</td><td>192,261.83</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── STEP 3: DATA PREPARATION ── -->
+    <section id="prep" class="section">
+      <div class="section-header">
+        <span class="section-num">3</span>
+        <div>
+          <h2>Data Preparation</h2>
+          <p class="section-sub">Encode, split, and scale for unbiased evaluation.</p>
+        </div>
+      </div>
+      <div class="card-row">
+        <div class="card">
+          <div class="card-title">Train / Val / Test Split</div>
+          <div class="split-bar">
+            <div class="split-seg seg-fit" style="width:60%">Fit<br/><strong>30</strong></div>
+            <div class="split-seg seg-val" style="width:20%">Val<br/><strong>10</strong></div>
+            <div class="split-seg seg-test" style="width:20%">Test<br/><strong>10</strong></div>
+          </div>
+          <div class="card-body" style="margin-top:12px">Selection on <em>fit</em> · Method comparison on <em>val</em> · Final score on <em>test</em> (touched once)</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Encoded Features (5 total)</div>
+          <div class="badge-list">
+            <span class="badge badge-teal">R&D Spend</span>
+            <span class="badge badge-blue">Administration</span>
+            <span class="badge badge-blue">Marketing Spend</span>
+            <span class="badge badge-purple">State_Florida</span>
+            <span class="badge badge-purple">State_New York</span>
+          </div>
+          <div class="card-body" style="margin-top:12px">One-hot encoding applied to <em>State</em>; California is the baseline (dropped). Numeric features standardised for methods that require it.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STEP 4: MODELING – 20 METHODS ── -->
+    <section id="modeling" class="section">
+      <div class="section-header">
+        <span class="section-num">4</span>
+        <div>
+          <h2>Modeling — 20 Feature-Selection Methods</h2>
+          <p class="section-sub">All methods trained on fit set only. Compare using validation RMSE. Click a column header to sort.</p>
+        </div>
+      </div>
+
+      <div class="table-controls">
+        <input id="methodSearch" class="search-box" type="text" placeholder="🔍  Search method…" oninput="filterTable()"/>
+        <span class="winner-legend"><span class="dot dot-gold"></span> Winner &nbsp; <span class="dot dot-green"></span> Top 5</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table sortable" id="methodTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)" class="sortable-col">Rank <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable(1)" class="sortable-col">Method <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable(2)" class="sortable-col">Features <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable(3)" class="sortable-col">Val RMSE <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable(4)" class="sortable-col">Val MAE <span class="sort-icon">↕</span></th>
+              <th>Selected Features</th>
+            </tr>
+          </thead>
+          <tbody id="methodBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── STEP 5: 5-METHOD DEEP DIVE ── -->
+    <section id="five-methods" class="section">
+      <div class="section-header">
+        <span class="section-num">5</span>
+        <div>
+          <h2>5-Method Deep Dive — RMSE &amp; R² vs. # Features</h2>
+          <p class="section-sub">Sweep k = 1 → 5 for each method. Final model fitted on dev set, evaluated on held-out test set.</p>
+        </div>
+      </div>
+
+      <!-- Method filter tabs -->
+      <div class="method-tabs" id="methodTabs">
+        <button class="tab-btn active" onclick="toggleMethod('all')">All Methods</button>
+        <button class="tab-btn" onclick="toggleMethod('RFE')">RFE</button>
+        <button class="tab-btn" onclick="toggleMethod('LassoCV')">LassoCV</button>
+        <button class="tab-btn" onclick="toggleMethod('F-test')">F-test</button>
+        <button class="tab-btn" onclick="toggleMethod('RF Importance')">RF Importance</button>
+        <button class="tab-btn" onclick="toggleMethod('Forward SFS')">Forward SFS</button>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="chart-title">RMSE by Number of Features</div>
+          <canvas id="rmseChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">R-squared by Number of Features</div>
+          <canvas id="r2Chart"></canvas>
+        </div>
+      </div>
+
+      <!-- 5-Method Table -->
+      <h3 class="sub-heading" style="margin-top:32px">Full Results Table</h3>
+      <div class="method-tab-row" id="fiveMethodTabRow">
+        <button class="pill-btn active" onclick="filterFiveTable('all')">All</button>
+        <button class="pill-btn" onclick="filterFiveTable('RFE')">RFE</button>
+        <button class="pill-btn" onclick="filterFiveTable('LassoCV')">LassoCV</button>
+        <button class="pill-btn" onclick="filterFiveTable('F-test')">F-test</button>
+        <button class="pill-btn" onclick="filterFiveTable('RF Importance')">RF Importance</button>
+        <button class="pill-btn" onclick="filterFiveTable('Forward SFS')">Forward SFS</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="fiveTable">
+          <thead>
+            <tr><th>Method</th><th># Features</th><th>Selected Features</th><th>Test RMSE</th><th>Test R²</th></tr>
+          </thead>
+          <tbody id="fiveBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── STEP 6: EVALUATION ── -->
+    <section id="evaluation" class="section">
+      <div class="section-header">
+        <span class="section-num">6</span>
+        <div>
+          <h2>Evaluation — Final Test Results</h2>
+          <p class="section-sub">Winner: <strong>Permutation Importance</strong> (k=3) · Re-fitted on full dev set · Scored once on held-out test set.</p>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card stat-card-winner">
+          <div class="stat-val teal">8,243</div>
+          <div class="stat-lbl">Test RMSE</div>
+        </div>
+        <div class="stat-card stat-card-winner">
+          <div class="stat-val teal">0.916</div>
+          <div class="stat-lbl">Test R²</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">6,431</div>
+          <div class="stat-lbl">Test MAE</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">33,777</div>
+          <div class="stat-lbl">Baseline RMSE (mean pred.)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val teal">−75.6%</div>
+          <div class="stat-lbl">RMSE improvement vs baseline</div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>🏆 Winning method:</strong> Permutation Importance (k=3)<br/>
+        <strong>Selected features:</strong>
+        <span class="badge badge-teal">R&amp;D Spend</span>
+        <span class="badge badge-blue">Marketing Spend</span>
+        <span class="badge badge-purple">State_New York</span>
+      </div>
+
+      <div class="chart-row" style="margin-top:28px">
+        <div class="chart-card">
+          <div class="chart-title">Actual vs. Predicted Profit (Test Set)</div>
+          <canvas id="scatterChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Residuals (Actual − Predicted)</div>
+          <canvas id="residChart"></canvas>
+        </div>
+      </div>
+
+      <h3 class="sub-heading" style="margin-top:32px">Test Set Predictions</h3>
+      <div class="table-wrap">
+        <table class="data-table" id="predTable">
+          <thead>
+            <tr><th>#</th><th>Actual Profit</th><th>Predicted Profit</th><th>Residual</th><th>|Error|</th></tr>
+          </thead>
+          <tbody id="predBody"></tbody>
+        </table>
+      </div>
+
+      <div class="info-box" style="margin-top:24px">
+        <strong>🚀 New Startup Prediction:</strong> For a startup with R&D Spend $120,000 · Administration $130,000 · Marketing $250,000 · State California — predicted profit is <strong>$149,553.78</strong>.
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-left">
+      <strong>📈 50 Startups CRISP-DM Analysis</strong><br/>
+      Built with Python · scikit-learn · Chart.js
+    </div>
+    <div class="footer-right">
+      Design &amp; style inspired by <a href="https://statsunlock.com/multiple-linear-regression-calculator/" target="_blank" rel="noopener">StatsUnlock.com</a> · Multiple Linear Regression Calculator.<br/>
+      <span class="footer-note">Results are exploratory. Dataset: 50 Startups (50 observations).</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  INLINE DATA
+// ══════════════════════════════════════════════════════════
+const METHODS_20 = [
+  { rank:1,  method:"13 Permutation Importance", features:3, rmse:9777.98, mae:8566.25, selected:"R&D Spend, Administration, Marketing Spend" },
+  { rank:2,  method:"15 Random Forest Importance", features:3, rmse:9777.98, mae:8566.25, selected:"R&D Spend, Administration, Marketing Spend" },
+  { rank:3,  method:"16 Gradient Boosting Importance", features:3, rmse:9777.98, mae:8566.25, selected:"R&D Spend, Administration, Marketing Spend" },
+  { rank:4,  method:"06 RFECV", features:1, rmse:10278.16, mae:8466.18, selected:"R&D Spend" },
+  { rank:5,  method:"19 Partial F-test", features:1, rmse:10278.16, mae:8466.18, selected:"R&D Spend" },
+  { rank:6,  method:"05 F-test SelectKBest", features:3, rmse:10812.94, mae:8827.90, selected:"R&D Spend, Marketing Spend, State_Florida" },
+  { rank:7,  method:"09 Pearson Correlation", features:3, rmse:10812.94, mae:8827.90, selected:"R&D Spend, Marketing Spend, State_Florida" },
+  { rank:8,  method:"04 Backward SFS", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+  { rank:9,  method:"12 Best Subset CV", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+  { rank:10, method:"11 Stepwise CV", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+  { rank:11, method:"14 Ridge Coefficient Ranking", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+  { rank:12, method:"10 Mutual Information", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+  { rank:13, method:"01 RFE", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+  { rank:14, method:"03 Forward SFS", features:3, rmse:12744.79, mae:10104.40, selected:"R&D Spend, Marketing Spend, State_New York" },
+  { rank:15, method:"02 LassoCV", features:4, rmse:12796.24, mae:10107.57, selected:"R&D Spend, Marketing Spend, State_Florida, State_New York" },
+  { rank:16, method:"18 Stability Selection (Lasso)", features:4, rmse:12796.24, mae:10107.57, selected:"R&D Spend, Marketing Spend, State_Florida, State_New York" },
+  { rank:17, method:"08 VIF Elimination", features:5, rmse:13279.05, mae:10464.04, selected:"R&D Spend, Administration, Marketing Spend, State_Florida, State_New York" },
+  { rank:18, method:"07 ElasticNetCV", features:5, rmse:13279.05, mae:10464.04, selected:"R&D Spend, Administration, Marketing Spend, State_Florida, State_New York" },
+  { rank:19, method:"00 All Features (Baseline)", features:5, rmse:13279.05, mae:10464.04, selected:"R&D Spend, Administration, Marketing Spend, State_Florida, State_New York" },
+];
+
+const FIVE_METHODS = {
+  labels: [1,2,3,4,5],
+  data: {
+    "RFE":           { rmse:[7714.33,8206.33,8242.78,8254.69,9055.96], r2:[0.9265,0.9168,0.9161,0.9159,0.8987], features:[["R&D Spend"],["R&D Spend","Marketing Spend"],["R&D Spend","Marketing Spend","State_New York"],["R&D Spend","Marketing Spend","State_New York","State_Florida"],["R&D Spend","Marketing Spend","State_New York","State_Florida","Administration"]] },
+    "LassoCV":       { rmse:[7714.33,8206.33,8242.78,8254.69,9055.96], r2:[0.9265,0.9168,0.9161,0.9159,0.8987], features:[["R&D Spend"],["R&D Spend","Marketing Spend"],["R&D Spend","Marketing Spend","State_New York"],["R&D Spend","Marketing Spend","State_New York","State_Florida"],["R&D Spend","Marketing Spend","State_New York","State_Florida","Administration"]] },
+    "F-test":        { rmse:[7714.33,8206.33,8248.67,9055.96,9055.96], r2:[0.9265,0.9168,0.9160,0.8987,0.8987], features:[["R&D Spend"],["R&D Spend","Marketing Spend"],["R&D Spend","Marketing Spend","State_Florida"],["R&D Spend","Marketing Spend","State_Florida","Administration"],["R&D Spend","Marketing Spend","State_Florida","Administration","State_New York"]] },
+    "RF Importance": { rmse:[7714.33,8206.33,8995.91,9055.96,9055.96], r2:[0.9265,0.9168,0.9001,0.8987,0.8987], features:[["R&D Spend"],["R&D Spend","Marketing Spend"],["R&D Spend","Marketing Spend","Administration"],["R&D Spend","Marketing Spend","Administration","State_Florida"],["R&D Spend","Marketing Spend","Administration","State_Florida","State_New York"]] },
+    "Forward SFS":   { rmse:[7714.33,7718.10,8242.78,9015.11,9055.96], r2:[0.9265,0.9264,0.9161,0.8996,0.8987], features:[["R&D Spend"],["R&D Spend","State_New York"],["R&D Spend","State_New York","Marketing Spend"],["R&D Spend","State_New York","Marketing Spend","Administration"],["R&D Spend","State_New York","Marketing Spend","Administration","State_Florida"]] },
+  }
+};
+
+const PREDICTIONS = [
+  { actual:134307.35, pred:127696.49 },
+  { actual:81005.76,  pred:82757.16 },
+  { actual:99937.59,  pred:97850.97 },
+  { actual:64926.08,  pred:46020.28 },
+  { actual:125370.37, pred:130446.37 },
+  { actual:35673.41,  pred:45586.47 },
+  { actual:105733.54, pred:109986.93 },
+  { actual:107404.34, pred:101778.00 },
+  { actual:97427.84,  pred:97196.69 },
+  { actual:122776.86, pred:112925.70 },
+];
+
+const COLORS = {
+  "RFE":           "#0cb8b6",
+  "LassoCV":       "#4f8ef7",
+  "F-test":        "#46c97e",
+  "RF Importance": "#f5a623",
+  "Forward SFS":   "#9f6ef5",
+};
+
+// ══════════════════════════════════════════════════════════
+//  20-METHOD TABLE
+// ══════════════════════════════════════════════════════════
+function renderMethodTable(data) {
+  const body = document.getElementById("methodBody");
+  body.innerHTML = "";
+  data.forEach((d, i) => {
+    const isWinner = d.rank === 1;
+    const isTop5 = d.rank <= 5;
+    const tr = document.createElement("tr");
+    if (isWinner) tr.classList.add("row-winner");
+    else if (isTop5) tr.classList.add("row-top5");
+    tr.innerHTML = `
+      <td>${isWinner ? '<span class="badge badge-gold">🏆 1</span>' : d.rank}</td>
+      <td><strong>${d.method}</strong></td>
+      <td><span class="badge badge-neutral">${d.features}</span></td>
+      <td><strong>${d.rmse.toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></td>
+      <td>${d.mae.toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="feat-cell">${d.selected.split(", ").map(f=>`<span class="feat-tag">${f}</span>`).join("")}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+renderMethodTable(METHODS_20);
+
+function filterTable() {
+  const q = document.getElementById("methodSearch").value.toLowerCase();
+  const filtered = METHODS_20.filter(d => d.method.toLowerCase().includes(q) || d.selected.toLowerCase().includes(q));
+  renderMethodTable(filtered);
+}
+
+let sortDir = {};
+function sortTable(col) {
+  sortDir[col] = !sortDir[col];
+  const keys = ["rank","method","features","rmse","mae"];
+  const sorted = [...METHODS_20].sort((a,b) => {
+    const av = a[keys[col]], bv = b[keys[col]];
+    return sortDir[col] ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
+  });
+  renderMethodTable(sorted);
+}
+
+// ══════════════════════════════════════════════════════════
+//  5-METHOD CHARTS
+// ══════════════════════════════════════════════════════════
+let activeMethod = "all";
+
+function buildDatasets(metric, methodFilter) {
+  return Object.entries(FIVE_METHODS.data)
+    .filter(([m]) => methodFilter === "all" || m === methodFilter)
+    .map(([m, d]) => ({
+      label: m,
+      data: d[metric],
+      borderColor: COLORS[m],
+      backgroundColor: COLORS[m] + "22",
+      pointBackgroundColor: COLORS[m],
+      tension: 0.3,
+      borderWidth: 2.5,
+      pointRadius: 5,
+      pointHoverRadius: 7,
+    }));
+}
+
+const rmseChart = new Chart(document.getElementById("rmseChart"), {
+  type: "line",
+  data: { labels: FIVE_METHODS.labels, datasets: buildDatasets("rmse", "all") },
+  options: chartOpts("Test RMSE (lower = better)", false)
+});
+
+const r2Chart = new Chart(document.getElementById("r2Chart"), {
+  type: "line",
+  data: { labels: FIVE_METHODS.labels, datasets: buildDatasets("r2", "all") },
+  options: chartOpts("Test R²  (higher = better)", true)
+});
+
+function chartOpts(yLabel, isR2) {
+  return {
+    responsive: true,
+    interaction: { mode:"index", intersect:false },
+    plugins: {
+      legend: { position:"bottom", labels:{ boxWidth:14, font:{size:12} } },
+      tooltip: {
+        callbacks: {
+          afterBody(ctx) {
+            const di = ctx[0].dataIndex;
+            const m = ctx[0].dataset.label;
+            const feats = FIVE_METHODS.data[m]?.features[di];
+            return feats ? ["", "Features: " + feats.join(", ")] : [];
+          }
+        }
+      }
+    },
+    scales: {
+      x: { title:{ display:true, text:"Number of Features" }, grid:{ color:"#eee" } },
+      y: { title:{ display:true, text:yLabel }, grid:{ color:"#eee" },
+           ...(isR2 ? { min:0.88, max:0.935 } : { min:7000, max:9500 }) }
+    }
+  };
+}
+
+function toggleMethod(m) {
+  activeMethod = m;
+  document.querySelectorAll("#methodTabs .tab-btn").forEach(b => b.classList.remove("active"));
+  event.target.classList.add("active");
+  rmseChart.data.datasets = buildDatasets("rmse", m);
+  r2Chart.data.datasets   = buildDatasets("r2",   m);
+  rmseChart.update();
+  r2Chart.update();
+  filterFiveTable(m === "all" ? "all" : m);
+}
+
+// ── 5-Method table ──
+function renderFiveTable(filter) {
+  const body = document.getElementById("fiveBody");
+  body.innerHTML = "";
+  const globalBest = 7714.33;
+  Object.entries(FIVE_METHODS.data).forEach(([method, d]) => {
+    if (filter !== "all" && method !== filter) return;
+    d.rmse.forEach((rmse, i) => {
+      const r2   = d.r2[i];
+      const feats = d.features[i];
+      const isBest = Math.abs(rmse - globalBest) < 1;
+      const tr = document.createElement("tr");
+      if (isBest) tr.classList.add("row-winner");
+      tr.innerHTML = `
+        <td><strong>${method}</strong></td>
+        <td>${i+1}</td>
+        <td>${feats.map(f=>`<span class="feat-tag">${f}</span>`).join("")}</td>
+        <td><strong>${rmse.toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></td>
+        <td>${r2.toFixed(4)}</td>`;
+      body.appendChild(tr);
+    });
+  });
+}
+
+function filterFiveTable(m) {
+  document.querySelectorAll("#fiveMethodTabRow .pill-btn").forEach(b => b.classList.remove("active"));
+  [...document.querySelectorAll("#fiveMethodTabRow .pill-btn")].find(b => b.textContent === (m==="all"?"All":m))?.classList.add("active");
+  renderFiveTable(m);
+}
+
+renderFiveTable("all");
+
+// ══════════════════════════════════════════════════════════
+//  EVALUATION
+// ══════════════════════════════════════════════════════════
+// Scatter
+const scatterChart = new Chart(document.getElementById("scatterChart"), {
+  type: "scatter",
+  data: {
+    datasets: [
+      {
+        label: "Test Predictions",
+        data: PREDICTIONS.map(p => ({ x: p.actual, y: p.pred })),
+        backgroundColor: "#0cb8b622",
+        borderColor: "#0cb8b6",
+        pointRadius: 7,
+        pointHoverRadius: 9,
+      },
+      {
+        label: "Perfect fit (y = x)",
+        data: [{x:30000,y:30000},{x:200000,y:200000}],
+        type: "line",
+        borderColor: "#e03", borderDash:[6,4],
+        borderWidth: 1.5, pointRadius:0, fill:false,
+      }
+    ]
+  },
+  options: {
+    responsive:true,
+    plugins:{ legend:{ position:"bottom" } },
+    scales:{
+      x:{ title:{ display:true, text:"Actual Profit ($)" }, grid:{ color:"#eee" } },
+      y:{ title:{ display:true, text:"Predicted Profit ($)" }, grid:{ color:"#eee" } }
+    }
+  }
+});
+
+// Residuals
+const residChart = new Chart(document.getElementById("residChart"), {
+  type: "bar",
+  data: {
+    labels: PREDICTIONS.map((_,i)=>`Test ${i+1}`),
+    datasets:[{
+      label:"Residual ($)",
+      data: PREDICTIONS.map(p => Math.round(p.actual - p.pred)),
+      backgroundColor: PREDICTIONS.map(p => p.actual - p.pred >= 0 ? "#0cb8b688" : "#f5a62388"),
+      borderColor:     PREDICTIONS.map(p => p.actual - p.pred >= 0 ? "#0cb8b6"   : "#f5a623"),
+      borderWidth:1.5
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{ legend:{ position:"bottom" } },
+    scales:{
+      x:{ grid:{ color:"#eee" } },
+      y:{ title:{ display:true, text:"Residual ($)" }, grid:{ color:"#eee" } }
+    }
+  }
+});
+
+// Prediction table
+(function(){
+  const body = document.getElementById("predBody");
+  PREDICTIONS.forEach((p,i) => {
+    const resid = p.actual - p.pred;
+    const absErr = Math.abs(resid);
+    const tr = document.createElement("tr");
+    tr.innerHTML=`<td>${i+1}</td><td>$${p.actual.toLocaleString("en",{minimumFractionDigits:2})}</td><td>$${p.pred.toLocaleString("en",{minimumFractionDigits:2})}</td><td class="${resid>=0?'pos-resid':'neg-resid'}">${resid>=0?"+":""}$${Math.round(resid).toLocaleString()}</td><td>$${Math.round(absErr).toLocaleString()}</td>`;
+    body.appendChild(tr);
+  });
+})();
+
+// ══════════════════════════════════════════════════════════
+//  ACTIVE SIDEBAR
+// ══════════════════════════════════════════════════════════
+const sections = document.querySelectorAll("section[id]");
+const links    = document.querySelectorAll(".step-link");
+window.addEventListener("scroll", () => {
+  let cur = "";
+  sections.forEach(s => { if(window.scrollY >= s.offsetTop - 120) cur = s.id; });
+  links.forEach(l => { l.classList.toggle("active", l.getAttribute("href") === "#"+cur); });
+});
+</script>
+</body>
+</html>

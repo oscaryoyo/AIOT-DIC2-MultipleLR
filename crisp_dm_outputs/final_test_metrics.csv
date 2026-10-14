@@ -1,0 +1,2 @@
+Method,Features,Test MAE,Test MSE,Test RMSE,Test R2,Baseline Test RMSE
+13 Permutation importance,"R&D Spend, Marketing Spend, State_New York",6430.578356776379,67943465.80664524,8242.782649484654,0.9160976403529224,33776.691540126405

@@ -1,0 +1,20 @@
+Method,Feature count,Validation RMSE,Validation MAE,Selected features
+13 Permutation importance,3,9777.97659724717,8566.254920305884,"R&D Spend, Administration, Marketing Spend"
+15 Random forest importance,3,9777.97659724717,8566.254920305884,"R&D Spend, Administration, Marketing Spend"
+16 Gradient boosting importance,3,9777.97659724717,8566.254920305884,"R&D Spend, Administration, Marketing Spend"
+06 RFECV,1,10278.161682278398,8466.180771360414,R&D Spend
+19 Partial F-test,1,10278.161682278398,8466.180771360414,R&D Spend
+05 F-test SelectKBest,3,10812.944496103362,8827.895792875377,"R&D Spend, Marketing Spend, State_Florida"
+09 Pearson correlation,3,10812.944496103362,8827.895792875377,"R&D Spend, Marketing Spend, State_Florida"
+04 Backward SFS,3,12744.78663152091,10104.402227027287,"R&D Spend, Marketing Spend, State_New York"
+12 Best subset CV,3,12744.78663152091,10104.402227027287,"R&D Spend, Marketing Spend, State_New York"
+11 Stepwise CV,3,12744.78663152091,10104.402227027287,"R&D Spend, Marketing Spend, State_New York"
+14 Ridge coefficient ranking,3,12744.78663152091,10104.402227027287,"R&D Spend, Marketing Spend, State_New York"
+10 Mutual information,3,12744.78663152091,10104.402227027287,"R&D Spend, Marketing Spend, State_New York"
+01 RFE,3,12744.78663152091,10104.402227027287,"R&D Spend, Marketing Spend, State_New York"
+03 Forward SFS,3,12744.78663152091,10104.402227027287,"R&D Spend, Marketing Spend, State_New York"
+02 LassoCV,4,12796.243893215675,10107.570752818427,"R&D Spend, Marketing Spend, State_Florida, State_New York"
+18 Stability selection (Lasso),4,12796.243893215675,10107.570752818427,"R&D Spend, Marketing Spend, State_Florida, State_New York"
+08 VIF elimination,5,13279.052926167218,10464.041490823158,"R&D Spend, Administration, Marketing Spend, State_Florida, State_New York"
+07 ElasticNetCV,5,13279.052926167218,10464.041490823158,"R&D Spend, Administration, Marketing Spend, State_Florida, State_New York"
+00 All features (baseline),5,13279.052926167218,10464.041490823158,"R&D Spend, Administration, Marketing Spend, State_Florida, State_New York"

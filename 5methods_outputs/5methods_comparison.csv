@@ -1,0 +1,26 @@
+Method,Num Features,Selected Features,RMSE,R-squared
+RFE,1,['R&D Spend'],7714.334891,0.926511
+RFE,2,"['R&D Spend', 'Marketing Spend']",8206.328813,0.916838
+RFE,3,"['R&D Spend', 'Marketing Spend', 'State_New York']",8242.782649,0.916098
+RFE,4,"['R&D Spend', 'Marketing Spend', 'State_New York', 'State_Florida']",8254.686589,0.915855
+RFE,5,"['R&D Spend', 'Marketing Spend', 'State_New York', 'State_Florida', 'Administration']",9055.957323,0.898727
+LassoCV,1,['R&D Spend'],7714.334891,0.926511
+LassoCV,2,"['R&D Spend', 'Marketing Spend']",8206.328813,0.916838
+LassoCV,3,"['R&D Spend', 'Marketing Spend', 'State_New York']",8242.782649,0.916098
+LassoCV,4,"['R&D Spend', 'Marketing Spend', 'State_New York', 'State_Florida']",8254.686589,0.915855
+LassoCV,5,"['R&D Spend', 'Marketing Spend', 'State_New York', 'State_Florida', 'Administration']",9055.957323,0.898727
+F-test,1,['R&D Spend'],7714.334891,0.926511
+F-test,2,"['R&D Spend', 'Marketing Spend']",8206.328813,0.916838
+F-test,3,"['R&D Spend', 'Marketing Spend', 'State_Florida']",8248.672032,0.915978
+F-test,4,"['R&D Spend', 'Marketing Spend', 'State_Florida', 'Administration']",9055.957752,0.898727
+F-test,5,"['R&D Spend', 'Marketing Spend', 'State_Florida', 'Administration', 'State_New York']",9055.957323,0.898727
+RF Importance,1,['R&D Spend'],7714.334891,0.926511
+RF Importance,2,"['R&D Spend', 'Marketing Spend']",8206.328813,0.916838
+RF Importance,3,"['R&D Spend', 'Marketing Spend', 'Administration']",8995.905803,0.900065
+RF Importance,4,"['R&D Spend', 'Marketing Spend', 'Administration', 'State_Florida']",9055.957752,0.898727
+RF Importance,5,"['R&D Spend', 'Marketing Spend', 'Administration', 'State_Florida', 'State_New York']",9055.957323,0.898727
+Forward SFS,1,['R&D Spend'],7714.334891,0.926511
+Forward SFS,2,"['R&D Spend', 'State_New York']",7718.101892,0.926439
+Forward SFS,3,"['R&D Spend', 'State_New York', 'Marketing Spend']",8242.782649,0.916098
+Forward SFS,4,"['R&D Spend', 'State_New York', 'Marketing Spend', 'Administration']",9015.112542,0.899638
+Forward SFS,5,"['R&D Spend', 'State_New York', 'Marketing Spend', 'Administration', 'State_Florida']",9055.957323,0.898727
