@@ -425,12 +425,12 @@
 
       <!-- Method filter tabs -->
       <div class="method-tabs" id="methodTabs">
-        <button class="tab-btn active" onclick="toggleMethod('all')">All Methods</button>
-        <button class="tab-btn" onclick="toggleMethod('RFE')">RFE</button>
-        <button class="tab-btn" onclick="toggleMethod('LassoCV')">LassoCV</button>
-        <button class="tab-btn" onclick="toggleMethod('F-test')">F-test</button>
-        <button class="tab-btn" onclick="toggleMethod('RF Importance')">RF Importance</button>
-        <button class="tab-btn" onclick="toggleMethod('Forward SFS')">Forward SFS</button>
+        <button class="tab-btn active" onclick="toggleMethod('all', this)">All Methods</button>
+        <button class="tab-btn" onclick="toggleMethod('RFE', this)">RFE</button>
+        <button class="tab-btn" onclick="toggleMethod('LassoCV', this)">LassoCV</button>
+        <button class="tab-btn" onclick="toggleMethod('F-test', this)">F-test</button>
+        <button class="tab-btn" onclick="toggleMethod('RF Importance', this)">RF Importance</button>
+        <button class="tab-btn" onclick="toggleMethod('Forward SFS', this)">Forward SFS</button>
       </div>
 
       <div class="chart-row">
@@ -881,7 +881,7 @@
 //  DATA DEFINITIONS: KING COUNTY, 50 STARTUPS & BOSTON HOUSING
 // ══════════════════════════════════════════════════════════
 
-const KC_HOUSING_DATA = (typeof KC_HOUSING_RAW !== 'undefined') ? KC_HOUSING_RAW : null;
+
 
 const STARTUPS_DATA = {
   id: "50_startups",
@@ -2592,15 +2592,15 @@ const r2Chart = new Chart(document.getElementById("r2Chart"), {
   options: chartOpts("Test R² (higher = better)", true)
 });
 
-function toggleMethod(m) {
-  activeMethod = m;
+function toggleMethod(method, button) {
+  activeMethod = method;
   document.querySelectorAll("#methodTabs .tab-btn").forEach(b => b.classList.remove("active"));
-  event.target.classList.add("active");
-  rmseChart.data.datasets = buildDatasets("rmse", m);
-  r2Chart.data.datasets   = buildDatasets("r2",   m);
+  if (button) button.classList.add("active");
+  rmseChart.data.datasets = buildDatasets("rmse", method);
+  r2Chart.data.datasets   = buildDatasets("r2",   method);
   rmseChart.update();
   r2Chart.update();
-  filterFiveTable(m === "all" ? "all" : m);
+  filterFiveTable(method === "all" ? "all" : method);
 }
 
 function renderFiveTable(filter) {
