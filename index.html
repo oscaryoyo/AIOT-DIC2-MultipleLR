@@ -418,7 +418,7 @@
         <span class="section-num">5</span>
         <div>
           <h2>5-Method Deep Dive — RMSE &amp; R² vs. # Features</h2>
-          <p class="section-sub">Sweep k = 1 → 5 for each method. Final model fitted on dev set, evaluated on held-out test set.</p>
+          <p class="section-sub" id="fiveSubDesc">Sweep k = 1 → 5 for each method. Final model fitted on dev set, evaluated on held-out test set.</p>
         </div>
       </div>
 
@@ -1742,10 +1742,25 @@ function applyDataset(data, mode) {
   } else {
     customFiveNotice.style.display = "none";
     currentFiveData = data.five_methods;
-    rmseChart.options.scales.y.min = currentFiveData.yBoundsRmse.min;
-    rmseChart.options.scales.y.max = currentFiveData.yBoundsRmse.max;
-    r2Chart.options.scales.y.min = currentFiveData.yBoundsR2.min;
-    r2Chart.options.scales.y.max = currentFiveData.yBoundsR2.max;
+    activeMethod = "all";
+    if (currentFiveData.labels && rmseChart.data && r2Chart.data) {
+      rmseChart.data.labels = currentFiveData.labels;
+      r2Chart.data.labels = currentFiveData.labels;
+    }
+    if (currentFiveData.yBoundsRmse) {
+      rmseChart.options.scales.y.min = currentFiveData.yBoundsRmse.min;
+      rmseChart.options.scales.y.max = currentFiveData.yBoundsRmse.max;
+    }
+    if (currentFiveData.yBoundsR2) {
+      r2Chart.options.scales.y.min = currentFiveData.yBoundsR2.min;
+      r2Chart.options.scales.y.max = currentFiveData.yBoundsR2.max;
+    }
+    renderFiveMethodTabs();
+    const fiveSubDescEl = document.getElementById("fiveSubDesc");
+    if (fiveSubDescEl && currentFiveData.labels) {
+      const maxK = currentFiveData.labels[currentFiveData.labels.length - 1];
+      fiveSubDescEl.textContent = `Sweep k = 1 → ${maxK} for each feature selection method. Model evaluated on held-out test set.`;
+    }
     rmseChart.data.datasets = buildDatasets("rmse", "all");
     r2Chart.data.datasets = buildDatasets("r2", "all");
     rmseChart.update();
@@ -2592,15 +2607,69 @@ const r2Chart = new Chart(document.getElementById("r2Chart"), {
   options: chartOpts("Test R² (higher = better)", true)
 });
 
+function renderFiveMethodTabs() {
+  const methodTabsEl = document.getElementById("methodTabs");
+  const tableTabsEl = document.getElementById("fiveMethodTabRow");
+  if (!methodTabsEl || !currentFiveData || !currentFiveData.data) return;
+
+  const methodKeys = Object.keys(currentFiveData.data);
+
+  // 1. Chart filter tabs
+  methodTabsEl.innerHTML = "";
+  const allBtn = document.createElement("button");
+  allBtn.className = "tab-btn" + (activeMethod === "all" ? " active" : "");
+  allBtn.textContent = "All Methods";
+  allBtn.onclick = function() { toggleMethod("all", this); };
+  methodTabsEl.appendChild(allBtn);
+
+  methodKeys.forEach(m => {
+    const btn = document.createElement("button");
+    btn.className = "tab-btn" + (activeMethod === m ? " active" : "");
+    btn.textContent = m;
+    btn.onclick = function() { toggleMethod(m, this); };
+    methodTabsEl.appendChild(btn);
+  });
+
+  // 2. Table filter pills
+  if (tableTabsEl) {
+    tableTabsEl.innerHTML = "";
+    const allPill = document.createElement("button");
+    allPill.className = "pill-btn" + (activeMethod === "all" ? " active" : "");
+    allPill.textContent = "All";
+    allPill.onclick = function() { toggleMethod("all"); };
+    tableTabsEl.appendChild(allPill);
+
+    methodKeys.forEach(m => {
+      const pill = document.createElement("button");
+      pill.className = "pill-btn" + (activeMethod === m ? " active" : "");
+      pill.textContent = m;
+      pill.onclick = function() { toggleMethod(m); };
+      tableTabsEl.appendChild(pill);
+    });
+  }
+}
+
 function toggleMethod(method, button) {
   activeMethod = method;
-  document.querySelectorAll("#methodTabs .tab-btn").forEach(b => b.classList.remove("active"));
-  if (button) button.classList.add("active");
+  // Update active state on chart tabs
+  document.querySelectorAll("#methodTabs .tab-btn").forEach(b => {
+    const isTarget = (method === "all" && b.textContent === "All Methods") || b.textContent === method;
+    b.classList.toggle("active", isTarget);
+  });
+  // Update active state on table pills
+  document.querySelectorAll("#fiveMethodTabRow .pill-btn").forEach(b => {
+    const isTarget = (method === "all" && b.textContent === "All") || b.textContent === method;
+    b.classList.toggle("active", isTarget);
+  });
   rmseChart.data.datasets = buildDatasets("rmse", method);
   r2Chart.data.datasets   = buildDatasets("r2",   method);
   rmseChart.update();
   r2Chart.update();
-  filterFiveTable(method === "all" ? "all" : method);
+  renderFiveTable(method);
+}
+
+function filterFiveTable(m) {
+  toggleMethod(m);
 }
 
 function renderFiveTable(filter) {
@@ -2609,6 +2678,7 @@ function renderFiveTable(filter) {
   body.innerHTML = "";
   if (!currentFiveData || !currentFiveData.data) return;
 
+  const labels = currentFiveData.labels || [];
   let globalBest = Infinity;
   Object.values(currentFiveData.data).forEach(d => {
     d.rmse.forEach(v => { if (v < globalBest) globalBest = v; });
@@ -2618,25 +2688,20 @@ function renderFiveTable(filter) {
     if (filter !== "all" && method !== filter) return;
     d.rmse.forEach((rmse, i) => {
       const r2   = d.r2[i];
-      const feats = d.features[i];
+      const feats = d.features[i] || [];
+      const kCount = labels[i] !== undefined ? labels[i] : (i + 1);
       const isBest = Math.abs(rmse - globalBest) < 1;
       const tr = document.createElement("tr");
       if (isBest) tr.classList.add("row-winner");
       tr.innerHTML = `
         <td><strong>${method}</strong></td>
-        <td>${i+1}</td>
+        <td>${kCount}</td>
         <td>${feats.map(f=>`<span class="feat-tag">${f}</span>`).join("")}</td>
         <td><strong>${rmse.toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></td>
         <td>${r2.toFixed(4)}</td>`;
       body.appendChild(tr);
     });
   });
-}
-
-function filterFiveTable(m) {
-  document.querySelectorAll("#fiveMethodTabRow .pill-btn").forEach(b => b.classList.remove("active"));
-  [...document.querySelectorAll("#fiveMethodTabRow .pill-btn")].find(b => b.textContent === (m==="all"?"All":m))?.classList.add("active");
-  renderFiveTable(m);
 }
 
 // ══════════════════════════════════════════════════════════

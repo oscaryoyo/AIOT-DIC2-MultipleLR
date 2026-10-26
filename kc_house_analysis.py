@@ -18,8 +18,9 @@ import numpy as np
 import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.feature_selection import RFE, RFECV, SelectKBest, f_regression
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, lasso_path
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import KFold, cross_val_score, cross_validate, train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -666,6 +667,88 @@ def main():
             'q75': float(df[f].quantile(0.75)),
         }
 
+    # ── 5-Method Deep Dive Feature Selection Progression (Requirement 3) ──
+    print('\n' + '=' * 70)
+    print('COMPUTING 5-METHOD DEEP DIVE FEATURE SELECTIONS (k = 1 -> 16)')
+    print('=' * 70)
+
+    # 1. RFE (Recursive Feature Elimination with LinearRegression on standardized training data)
+    rfe_deep = RFE(estimator=LinearRegression(), n_features_to_select=1, step=1)
+    rfe_deep.fit(X_train_scaled, y_train)
+    rfe_ranked_features = pd.Series(rfe_deep.ranking_, index=baseline_16).sort_values().index.tolist()
+
+    # 2. LassoCV / Lasso Path Ranking
+    # Rank features by the step they first achieve non-zero coefficient along the regularization path
+    alphas, coef_path, _ = lasso_path(X_train_scaled.values, y_train.values, random_state=SEED)
+    first_active = {}
+    for i, f in enumerate(baseline_16):
+        act = np.where(np.abs(coef_path[i, :]) > 1e-3)[0]
+        first_active[f] = act[0] if len(act) > 0 else 999999
+    lasso_ranked_features = sorted(baseline_16, key=lambda f: (first_active[f], -np.max(np.abs(coef_path[baseline_16.index(f), :]))))
+
+    # 3. F-test (SelectKBest with f_regression)
+    F_scores, _ = f_regression(X_train, y_train)
+    ftest_ranked_features = pd.Series(-F_scores, index=baseline_16).sort_values().index.tolist()
+
+    # 4. Random Forest Feature Importance (RandomForestRegressor for ranking only)
+    rf_deep = RandomForestRegressor(n_estimators=100, random_state=SEED, n_jobs=-1, max_depth=12)
+    rf_deep.fit(X_train, y_train)
+    rf_ranked_features = pd.Series(-rf_deep.feature_importances_, index=baseline_16).sort_values().index.tolist()
+
+    # 5. Forward Sequential Feature Selection (Greedy forward selection with 3-fold CV RMSE)
+    selected_sfs = []
+    remaining_sfs = list(baseline_16)
+    kf_sfs = KFold(n_splits=3, shuffle=True, random_state=SEED)
+    for k in range(len(baseline_16)):
+        best_score = float('inf')
+        best_feat = None
+        for cand in remaining_sfs:
+            trial_feats = selected_sfs + [cand]
+            scores = -cross_val_score(LinearRegression(), X_train[trial_feats], y_train, cv=kf_sfs, scoring='neg_root_mean_squared_error')
+            mean_score = scores.mean()
+            if mean_score < best_score:
+                best_score = mean_score
+                best_feat = cand
+        selected_sfs.append(best_feat)
+        remaining_sfs.remove(best_feat)
+    sfs_ranked_features = selected_sfs
+
+    methods_ranked = {
+        'RFE': rfe_ranked_features,
+        'LassoCV': lasso_ranked_features,
+        'F-test': ftest_ranked_features,
+        'RF Importance': rf_ranked_features,
+        'Forward SFS': sfs_ranked_features,
+    }
+
+    five_methods_dict = {
+        'labels': list(range(1, len(baseline_16) + 1)),
+        'yBoundsRmse': {'min': 200000, 'max': 300000},
+        'yBoundsR2': {'min': 0.40, 'max': 0.75},
+        'data': {}
+    }
+
+    for m_name, ranked_list in methods_ranked.items():
+        rmse_progression = []
+        r2_progression = []
+        feature_subsets = []
+        for k in range(1, len(baseline_16) + 1):
+            subset = ranked_list[:k]
+            lr_k = LinearRegression()
+            lr_k.fit(X_train[subset], y_train)
+            pred_k = lr_k.predict(X_test[subset])
+            rmse_k = float(round(np.sqrt(mean_squared_error(y_test, pred_k)), 2))
+            r2_k = float(round(r2_score(y_test, pred_k), 4))
+            rmse_progression.append(rmse_k)
+            r2_progression.append(r2_k)
+            feature_subsets.append(subset)
+        five_methods_dict['data'][m_name] = {
+            'rmse': rmse_progression,
+            'r2': r2_progression,
+            'features': feature_subsets
+        }
+        print(f"  {m_name:14s}: k=1 RMSE=${rmse_progression[0]:,.0f} -> k=16 RMSE=${rmse_progression[-1]:,.0f} | Max R2={max(r2_progression):.4f}")
+
     # Assemble comprehensive export JSON for the website
     kc_web_data = {
         'id': 'kc_housing',
@@ -736,58 +819,7 @@ def main():
             'cv_r2': round(cv_r2_b, 4)
         },
         'modelC': selection_results,
-        'five_methods': {
-            'labels': [1, 2, 4, 6, 8, 10, 12, 14, 16],
-            'yBoundsRmse': {'min': 200000, 'max': 270000},
-            'yBoundsR2': {'min': 0.45, 'max': 0.72},
-            'data': {
-                'RFECV': {
-                    'rmse': [261543, 248231, 235120, 224890, 219430, 216890, 215320, 214710, 214473],
-                    'r2': [0.493, 0.542, 0.591, 0.627, 0.645, 0.669, 0.687, 0.694, 0.696],
-                    'features': [
-                        ['sqft_living'],
-                        ['sqft_living', 'grade'],
-                        ['sqft_living', 'grade', 'lat', 'waterfront'],
-                        ['sqft_living', 'grade', 'lat', 'waterfront', 'view', 'yr_built'],
-                        ['sqft_living', 'grade', 'lat', 'waterfront', 'view', 'yr_built', 'bathrooms', 'bedrooms'],
-                        ['sqft_living', 'grade', 'lat', 'waterfront', 'view', 'yr_built', 'bathrooms', 'bedrooms', 'condition', 'long'],
-                        ['sqft_living', 'grade', 'lat', 'waterfront', 'view', 'yr_built', 'bathrooms', 'bedrooms', 'condition', 'long', 'sqft_living15', 'floors'],
-                        ['sqft_living', 'grade', 'lat', 'waterfront', 'view', 'yr_built', 'bathrooms', 'bedrooms', 'condition', 'long', 'sqft_living15', 'floors', 'sqft_above', 'yr_renovated'],
-                        baseline_16
-                    ]
-                },
-                'SelectKBest (f_reg)': {
-                    'rmse': [261543, 249120, 238200, 228900, 222100, 218900, 216800, 215400, 214473],
-                    'r2': [0.493, 0.539, 0.580, 0.614, 0.636, 0.658, 0.682, 0.692, 0.696],
-                    'features': [
-                        ['sqft_living'],
-                        ['sqft_living', 'grade'],
-                        ['sqft_living', 'grade', 'sqft_above', 'sqft_living15'],
-                        ['sqft_living', 'grade', 'sqft_above', 'sqft_living15', 'bathrooms', 'view'],
-                        ['sqft_living', 'grade', 'sqft_above', 'sqft_living15', 'bathrooms', 'view', 'sqft_lot', 'bedrooms'],
-                        ['sqft_living', 'grade', 'sqft_above', 'sqft_living15', 'bathrooms', 'view', 'sqft_lot', 'bedrooms', 'lat', 'waterfront'],
-                        ['sqft_living', 'grade', 'sqft_above', 'sqft_living15', 'bathrooms', 'view', 'sqft_lot', 'bedrooms', 'lat', 'waterfront', 'floors', 'yr_renovated'],
-                        ['sqft_living', 'grade', 'sqft_above', 'sqft_living15', 'bathrooms', 'view', 'sqft_lot', 'bedrooms', 'lat', 'waterfront', 'floors', 'yr_renovated', 'yr_built', 'condition'],
-                        baseline_16
-                    ]
-                },
-                'Backward Elim': {
-                    'rmse': [261543, 248231, 235120, 224890, 219430, 216890, 215320, 214610, 214473],
-                    'r2': [0.493, 0.542, 0.591, 0.627, 0.645, 0.669, 0.687, 0.695, 0.696],
-                    'features': [
-                        ['sqft_living'],
-                        ['sqft_living', 'lat'],
-                        ['sqft_living', 'lat', 'grade', 'yr_built'],
-                        ['sqft_living', 'lat', 'grade', 'yr_built', 'waterfront', 'view'],
-                        ['sqft_living', 'lat', 'grade', 'yr_built', 'waterfront', 'view', 'condition', 'long'],
-                        ['sqft_living', 'lat', 'grade', 'yr_built', 'waterfront', 'view', 'condition', 'long', 'bathrooms', 'bedrooms'],
-                        ['sqft_living', 'lat', 'grade', 'yr_built', 'waterfront', 'view', 'condition', 'long', 'bathrooms', 'bedrooms', 'sqft_living15', 'yr_renovated'],
-                        ['sqft_living', 'lat', 'grade', 'yr_built', 'waterfront', 'view', 'condition', 'long', 'bathrooms', 'bedrooms', 'sqft_living15', 'yr_renovated', 'sqft_above', 'sqft_lot15'],
-                        baseline_16
-                    ]
-                }
-            }
-        },
+        'five_methods': five_methods_dict,
         'evalSub': 'Baseline 16-Feature OLS Model · Evaluated once on held-out test set (N=4,323).',
         'evalStats': {
             'rmse': f"${metrics_b['rmse']:,.0f}",
@@ -833,6 +865,13 @@ def main():
     with open(web_json_path, 'w', encoding='utf-8') as f:
         json.dump(kc_web_data, f, indent=2, ensure_ascii=False)
     print(f'Website data exported to: {web_json_path}')
+
+    # Save kc_house_data.js for static GitHub Pages loading
+    web_js_path = Path('kc_house_data.js')
+    with open(web_js_path, 'w', encoding='utf-8') as f:
+        f.write('const KC_HOUSING_RAW = ' + json.dumps(kc_web_data, indent=2, ensure_ascii=False) + ';\n')
+        f.write('\nif (typeof window !== "undefined") {\n  window.KC_HOUSING_RAW = KC_HOUSING_RAW;\n}\n')
+    print(f'Website JS exported to: {web_js_path}')
     print('\nAll 6 CRISP-DM stages completed successfully!')
 
 
