@@ -434,6 +434,75 @@ a:hover { text-decoration:underline; }
   display: block; margin-top: 10px;
 }
 
+/* ── Mode Switcher & Tabs for Regression Modes ── */
+.mode-switcher-container {
+  display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;
+  background: var(--white); padding: 8px 12px; border-radius: var(--radius);
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+.mode-switcher-btn {
+  padding: 8px 18px; border-radius: 8px; border: 1px solid transparent;
+  background: transparent; color: var(--text); font-weight: 600; font-size: 13.5px;
+  cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px;
+}
+.mode-switcher-btn:hover {
+  background: var(--bg); color: var(--teal-dark);
+}
+.mode-switcher-btn.active {
+  background: var(--teal); color: #fff; border-color: var(--teal-dark);
+  box-shadow: 0 2px 8px rgba(12, 184, 182, 0.35);
+}
+
+/* ── Exploratory Visualizations Gallery ── */
+.viz-gallery-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 16px;
+}
+.viz-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
+}
+.viz-card-title {
+  font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.viz-interpretation {
+  font-size: 13px; color: #475569; background: #f8fafc; padding: 10px 14px;
+  border-radius: 6px; border-left: 3px solid var(--blue); margin-top: 10px; line-height: 1.6;
+}
+
+/* ── Assumptions Dashboard Table & Cards ── */
+.assumption-table th {
+  background: #1e293b; color: #fff; font-size: 12px;
+}
+.assumption-badge-pass {
+  background: var(--green-light); color: #166534; font-weight: 600; padding: 3px 8px; border-radius: 4px; font-size: 11.5px;
+}
+.assumption-badge-warning {
+  background: var(--orange-light); color: #9a3412; font-weight: 600; padding: 3px 8px; border-radius: 4px; font-size: 11.5px;
+}
+.assumption-badge-danger {
+  background: #fee2e2; color: #991b1b; font-weight: 600; padding: 3px 8px; border-radius: 4px; font-size: 11.5px;
+}
+
+/* ── Multicollinearity Callout Box ── */
+.collinearity-box {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border-left: 4px solid var(--orange); border-radius: var(--radius);
+  padding: 16px 20px; margin: 16px 0; color: #7c2d12;
+}
+.collinearity-box h4 {
+  font-size: 14px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+}
+
+/* ── Importance Bar ── */
+.importance-bar-container {
+  display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 4px;
+}
+.importance-bar {
+  height: 8px; border-radius: 4px; background: var(--teal); transition: width 0.3s;
+}
+
+
 /* ── Footer ─────────────────────────────────────────── */
 .site-footer {
   background:var(--dark); color:rgba(255,255,255,.7);

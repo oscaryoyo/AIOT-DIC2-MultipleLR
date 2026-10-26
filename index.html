@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>50 Startups – CRISP-DM Profit Prediction Analysis</title>
-  <meta name="description" content="Interactive CRISP-DM analysis of 50 Startups dataset using 20 feature selection methods and multiple linear regression. Test RMSE 8,243 · R² 0.916."/>
+  <title>King County House Price Prediction — Multiple Linear Regression &amp; CRISP-DM</title>
+  <meta name="description" content="King County House Price Prediction using Multiple Linear Regression, Automatic Feature Selection, and CRISP-DM 6-Stage Methodology."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="index.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="kc_house_data.js"></script>
 </head>
 <body>
 
@@ -79,22 +80,28 @@
       </div>
 
       <div class="control-row">
-        <!-- Problem Selection Dropdown (Requirement 1) -->
+        <!-- Problem Selection Dropdown (Requirement 1 & 4) -->
         <div class="control-group">
-          <label for="problemSelect"><strong>🎯 Select Regression Problem:</strong></label>
+          <label for="problemSelect"><strong>🎯 Select Regression Problem (問題類型選擇):</strong></label>
           <select id="problemSelect" class="select-input" onchange="onProblemSelectChange(this.value)">
-            <option value="50_startups" selected>50 Startups — Profit Prediction (Default)</option>
+            <option value="kc_housing" selected>🏡 King County — House Price Prediction (CRISP-DM)</option>
+            <option value="50_startups">50 Startups — Profit Prediction</option>
             <option value="boston_housing">Boston Housing — Housing Value Prediction</option>
-            <option value="custom_url">Custom Dataset URL (Load any public CSV)</option>
+            <option value="custom_url">Custom Dataset / Upload (自訂資料集)</option>
           </select>
         </div>
 
-        <!-- Custom CSV URL Input Field (Requirement 2) -->
+        <!-- Custom CSV URL / File Upload Input Fields (Requirement 2 & 4) -->
         <div class="control-group" id="urlInputContainer">
-          <label for="csvUrlInput"><strong>🌐 Public CSV Dataset URL:</strong></label>
-          <div style="display:flex; gap:8px;">
-            <input type="url" id="csvUrlInput" class="number-input" placeholder="https://raw.githubusercontent.com/.../dataset.csv" value="https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv"/>
-            <button type="button" class="tab-btn active" id="btnLoadCsv" onclick="loadCustomCsvFromUrl()">Load Dataset</button>
+          <label for="csvUrlInput"><strong>🌐 Public CSV URL or 📁 File Upload:</strong></label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <input type="url" id="csvUrlInput" class="number-input" style="flex:1; min-width:200px;" placeholder="https://raw.githubusercontent.com/.../dataset.csv" value="https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv"/>
+            <button type="button" class="tab-btn" id="btnLoadCsv" onclick="loadCustomCsvFromUrl()">Load URL</button>
+            <label class="tab-btn" style="cursor:pointer; display:inline-flex; align-items:center; gap:4px; margin:0;">
+              <span>📁 Upload CSV</span>
+              <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="loadCustomCsvFromFile(this.files[0])" />
+            </label>
+            <a href="https://www.kaggle.com/datasets/harlfoxem/housesalesprediction" target="_blank" rel="noopener" class="badge badge-teal" title="Kaggle Dataset: kc_house_data.csv (21,613 records, 17 features)" style="text-decoration:none;">Kaggle Source ↗</a>
           </div>
         </div>
       </div>
@@ -153,6 +160,11 @@
           <div class="card-title">Limitation</div>
           <div id="bizLimitBody" class="card-body">Only <strong>50 observations</strong> — rankings may be unstable. Results are exploratory, not production-grade.</div>
         </div>
+        <div class="card card-accent-purple" id="bizWhyMlCard" style="display:none;">
+          <div class="card-icon">📐</div>
+          <div class="card-title">Why Multiple Linear Regression? (多元迴歸價值)</div>
+          <div id="bizWhyMlBody" class="card-body">多元線性迴歸能嚴謹量化各項房屋特徵（如臥室、坪數、建築等級、建造年份）對成交房價的邊際貢獻金額（β 係數），並在控制其他變數下提供高度可解釋性與假設檢定支持。</div>
+        </div>
       </div>
     </section>
 
@@ -201,6 +213,43 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Exploratory Visualizations Gallery for King County (Requirement 2 & 4) -->
+      <div id="exploratoryVizSection" style="margin-top:32px; display:none;">
+        <h3 class="sub-heading">Exploratory Data Visualizations &amp; Interpretations (探索性資料視覺化)</h3>
+        <div class="viz-gallery-grid">
+          <div class="viz-card">
+            <div class="viz-card-title">
+              <span>🏠 House Price Distribution (房價分佈)</span>
+              <span class="badge badge-teal">Histogram &amp; Boxplot</span>
+            </div>
+            <img src="kc_house_outputs/kc_price_distribution.png" alt="House Price Distribution" class="diag-img"/>
+            <div class="viz-interpretation">
+              <strong>圖表解讀：</strong> King County 房價中位數為 <strong>$450,000</strong>，平均數為 <strong>$540,088</strong>。分佈呈現顯著右長尾偏態（Right-Skewed），大量住宅集中於 30 萬至 65 萬區間，但最高價達 $7,700,000 的頂級水岸豪宅拉高了平均數。此極端值在普通最小平方法 (OLS) 下會放大殘差變異。
+            </div>
+          </div>
+          <div class="viz-card">
+            <div class="viz-card-title">
+              <span>🔥 Correlation Heatmap (17 候選特徵相關係數)</span>
+              <span class="badge badge-blue">Pearson r Matrix</span>
+            </div>
+            <img src="kc_house_outputs/kc_correlation_heatmap.png" alt="Correlation Heatmap" class="diag-img"/>
+            <div class="viz-interpretation">
+              <strong>圖表解讀：</strong> 房價相關性最高的特徵依序為：居住坪數 <code>sqft_living</code> (<strong>r = 0.702</strong>)、建築構造等級 <code>grade</code> (<strong>r = 0.667</strong>)、地上坪數 <code>sqft_above</code> (<strong>r = 0.606</strong>)、鄰近居住坪數 <code>sqft_living15</code> (<strong>r = 0.585</strong>) 與衛浴數 <code>bathrooms</code> (<strong>r = 0.526</strong>)。
+            </div>
+          </div>
+          <div class="viz-card" style="grid-column: 1 / -1;">
+            <div class="viz-card-title">
+              <span>📊 Key Predictors vs. House Price (核心特徵與房價散佈關係)</span>
+              <span class="badge badge-purple">Scatter &amp; Boxplots</span>
+            </div>
+            <img src="kc_house_outputs/kc_scatter_features_vs_price.png" alt="Key Predictors vs Price" class="diag-img"/>
+            <div class="viz-interpretation">
+              <strong>圖表解讀：</strong> (1) <strong>Living Area:</strong> 面積與房價呈現清晰正斜率線性相關，但面積超過 5,000 sqft 時價格離散度顯著擴大；(2) <strong>Grade:</strong> 建物等級對房價呈指數級溢價，8 級以上每跳一級價格近乎躍升 40%；(3) <strong>Bedrooms:</strong> 3 到 4 房為主流，高臥室數 (5+ 房) 未必等同超高總價（需搭配坪數與地段）；(4) <strong>Bathrooms:</strong> 衛浴數與房價呈現穩定正向梯形上升。
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ── STEP 3: DATA PREPARATION ── -->
@@ -234,6 +283,17 @@
           <div class="card-body" id="prepEncodeDesc" style="margin-top:12px">One-hot encoding applied to <em>State</em>; California is the baseline (dropped). Numeric features standardised for methods that require it.</div>
         </div>
       </div>
+
+      <!-- Exact Multicollinearity Diagnosis Alert (Requirement 2 & 3) -->
+      <div id="collinearityAlertBox" class="collinearity-box" style="display:none;">
+        <h4>⚠️ Exact Multicollinearity Diagnosis &amp; Feature Resolution (全共線性診斷與排除)</h4>
+        <p style="font-size:13px; line-height:1.6; margin-top:4px;">
+          原始 King County 資料集包含 17 個候選特徵，其中包含 <code>sqft_living</code> (總居住坪數)、<code>sqft_above</code> (地上坪數) 與 <code>sqft_basement</code> (地下室坪數)。<br/>
+          <strong>嚴謹數學驗證：<code>sqft_living = sqft_above + sqft_basement</code> (21,613 筆樣本無一例外，為完全線性恆等式)。</strong><br/>
+          此全線性相依將導致特徵矩陣秩虧（Rank-Deficient，行列式值為 0），VIF 膨脹至無窮大（數值運算無法唯一求得反矩陣）。<br/>
+          依專案標準規範，<strong>在基準多元線性迴歸模型中移除 <code>sqft_basement</code>，保留 16 個滿秩特徵</strong>；同時完整保留 17 個特徵以供探索性分析與迴歸診斷對比驗證。
+        </p>
+      </div>
     </section>
 
     <!-- ── STEP 4: MODELING – 20 METHODS ── -->
@@ -243,6 +303,87 @@
         <div>
           <h2>Modeling — 20 Feature-Selection Methods</h2>
           <p class="section-sub">All methods trained on fit set only. Compare using validation RMSE. Click a column header to sort.</p>
+        </div>
+      </div>
+
+      <!-- ── THREE REGRESSION MODES SWITCHER (Requirement 1, 3, 4) ── -->
+      <div id="kcModelingModesSection" style="margin-bottom:28px; display:none;">
+        <h3 class="sub-heading" style="margin-top:0;">Regression Mode Selector (三種迴歸模式切換)</h3>
+        <div class="mode-switcher-container">
+          <button type="button" class="mode-switcher-btn active" id="btnModeA" onclick="switchRegressionMode('A')">
+            <span>🔹</span> Model A: Simple Linear Regression (單變數)
+          </button>
+          <button type="button" class="mode-switcher-btn" id="btnModeB" onclick="switchRegressionMode('B')">
+            <span>🔷</span> Model B: Multiple Linear Regression (16 特徵基準)
+          </button>
+          <button type="button" class="mode-switcher-btn" id="btnModeC" onclick="switchRegressionMode('C')">
+            <span>⚡</span> Model C: Automatic Feature Selection (自動篩選)
+          </button>
+        </div>
+
+        <!-- Mode A Panel -->
+        <div id="modeAPanel" class="card" style="margin-bottom:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+            <div style="font-weight:700; color:var(--dark); font-size:15px;">
+              🔍 Model A: Single Feature Selection &amp; Regression
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <label for="simpleFeatureSelect" style="font-size:12.5px; font-weight:600;">選擇單一數值特徵 (X):</label>
+              <select id="simpleFeatureSelect" class="select-input" style="width:220px; padding:6px 10px;" onchange="updateSimpleLinearModel(this.value)">
+              </select>
+            </div>
+          </div>
+          <div id="simpleFormulaBox" class="formula-card" style="margin:0 0 16px;">
+            <div class="formula-title">
+              <span id="simpleFormulaTitle">Fitted Simple Linear Equation (單變數迴歸方程式)</span>
+              <span class="badge badge-teal">Simple OLS</span>
+            </div>
+            <div class="formula-math" id="simpleFormulaMath">
+              <span class="var-y">Price ($)</span> = <span class="var-const">-41,999.19</span> + <span class="var-x1">279.55</span> × (sqft_living)
+            </div>
+            <div class="formula-note" id="simpleFormulaNote">
+              * 最佳單變數特徵為居住坪數 (sqft_living)，解釋力達 R² = 0.4941。
+            </div>
+          </div>
+          <div class="stats-grid" id="simpleStatsGrid" style="margin-bottom:0;">
+            <div class="stat-card"><div class="stat-val teal" id="simpleRmse">$276,559</div><div class="stat-lbl">Test RMSE</div></div>
+            <div class="stat-card"><div class="stat-val teal" id="simpleR2">0.494</div><div class="stat-lbl">Test R²</div></div>
+            <div class="stat-card"><div class="stat-val" id="simpleMae">$177,868</div><div class="stat-lbl">Test MAE</div></div>
+            <div class="stat-card"><div class="stat-val" id="simpleAdjR2">0.494</div><div class="stat-lbl">Adjusted R²</div></div>
+          </div>
+        </div>
+
+        <!-- Mode B Panel -->
+        <div id="modeBPanel" class="card" style="display:none; margin-bottom:20px;">
+          <div style="font-weight:700; color:var(--dark); font-size:15px; margin-bottom:10px;">
+            📊 Model B: Baseline 16-Feature Multiple Linear Regression
+          </div>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">
+            以 16 個無共線性候選特徵訓練多元線性迴歸模型。下圖顯示各特徵依標準化迴歸係數 (|Standardized Beta|) 計算之相對重要性排序：
+          </p>
+          <div id="featureImportanceGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px; margin-bottom:14px;">
+          </div>
+        </div>
+
+        <!-- Mode C Panel -->
+        <div id="modeCPanel" class="card" style="display:none; margin-bottom:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+            <div style="font-weight:700; color:var(--dark); font-size:15px;">
+              ⚡ Model C: Automated Feature Selection Comparison
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <label for="featureSelectionMethodSelect" style="font-size:12.5px; font-weight:600;">篩選演算法 (CV Training):</label>
+              <select id="featureSelectionMethodSelect" class="select-input" style="width:260px; padding:6px 10px;" onchange="updateFeatureSelectionDisplay(this.value)">
+                <option value="RFECV (5-Fold CV)">RFECV (5-Fold CV 最優 k=16)</option>
+                <option value="Backward Elimination (p < 0.05)">Backward Elimination (p < 0.05, 14 特徵)</option>
+                <option value="Pearson Correlation (k=8)">Pearson Correlation (Top 8)</option>
+                <option value="SelectKBest f_regression (k=8)">SelectKBest f_regression (k=8)</option>
+                <option value="RFE (k=8)">RFE (k=8)</option>
+                <option value="VIF Multicollinearity Pruning">VIF 共線性剪枝 (VIF < 5.0, 15 特徵)</option>
+              </select>
+            </div>
+          </div>
+          <div id="featureSelectionDetailsBox" class="info-box info-box-blue" style="margin-bottom:14px;"></div>
         </div>
       </div>
 
@@ -513,17 +654,57 @@
         <div class="chart-row">
           <div class="chart-card">
             <div class="chart-title">Residuals vs. Fitted Values (Homoscedasticity &amp; Linearity)</div>
-            <img src="crisp_dm_outputs/residuals_vs_fitted.png" alt="Residuals vs Fitted Values" class="diag-img"/>
+            <img src="kc_house_outputs/kc_residuals_vs_fitted.png" id="residualsVsFittedImg" alt="Residuals vs Fitted Values" class="diag-img"/>
             <p style="font-size:12.5px; color:var(--muted); margin-top:8px;">
               Checks linearity and constant variance. Residuals bounce randomly around zero without funnel shape or systematic curvature, validating homoscedasticity.
             </p>
           </div>
           <div class="chart-card">
             <div class="chart-title">Normal Q-Q Plot (Normality of Residuals)</div>
-            <img src="crisp_dm_outputs/qq_plot.png" alt="Normal Q-Q Plot" class="diag-img"/>
+            <img src="kc_house_outputs/kc_qq_plot.png" id="qqPlotImg" alt="Normal Q-Q Plot" class="diag-img"/>
             <p style="font-size:12.5px; color:var(--muted); margin-top:8px;">
               Checks normality of error terms. Standardized residuals adhere closely to the theoretical diagonal line, confirming residual normality.
             </p>
+          </div>
+        </div>
+
+        <!-- ── STAGE 5.1: FIVE MAJOR REGRESSION ASSUMPTION TESTING DASHBOARD (Requirement 3, 5.1) ── -->
+        <div id="assumptionsDashboard" style="margin-top:36px; display:none;">
+          <h3 class="sub-heading">Five Major Regression Assumption Tests (五大迴歸假設嚴謹檢定)</h3>
+          <p style="font-size:13.5px; color:var(--muted); margin-bottom:14px;">
+            評估多元線性迴歸模型是否滿足高斯－馬可夫定理 (Gauss-Markov Assumptions) 與推論有效性準則：
+          </p>
+          <div class="table-wrap">
+            <table class="data-table assumption-table">
+              <thead>
+                <tr>
+                  <th style="min-width:140px;">統計假設 (Assumption)</th>
+                  <th style="min-width:160px;">檢定方法 (Test Method)</th>
+                  <th style="min-width:130px;">統計量 (Statistic)</th>
+                  <th style="min-width:100px;">p-Value</th>
+                  <th>判定與統計意涵 (Status &amp; Interpretation)</th>
+                  <th>處置方針 (Corrective Action)</th>
+                </tr>
+              </thead>
+              <tbody id="assumptionTableBody"></tbody>
+            </table>
+          </div>
+
+          <div class="chart-row" style="margin-top:20px;">
+            <div class="chart-card">
+              <div class="chart-title">Assumption 5: Multicollinearity Diagnostics (VIF < 10)</div>
+              <img src="kc_house_outputs/kc_multicollinearity_vif.png" alt="VIF Bar Chart" class="diag-img"/>
+              <p style="font-size:12.5px; color:var(--muted); margin-top:8px;">
+                變異數膨脹因子檢測。16 特徵模型中最高 VIF 為 <code>sqft_living</code> (8.64) 與 <code>sqft_above</code> (6.95)，均安全小於 10.0，成功排除全共線性。
+              </p>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Model Comparison: All 8 Configurations (RMSE &amp; R²)</div>
+              <img src="kc_house_outputs/kc_model_comparison.png" alt="Model Comparison Chart" class="diag-img"/>
+              <p style="font-size:12.5px; color:var(--muted); margin-top:8px;">
+                模型對比圖表：比較單變數線性迴歸 (Model A)、16 特徵基準多元迴歸 (Model B) 與各特徵選擇法 (Model C) 之 Test RMSE 與 R²。
+              </p>
+            </div>
           </div>
         </div>
 
@@ -697,8 +878,10 @@
 <script>
 
 // ══════════════════════════════════════════════════════════
-//  DATA DEFINITIONS: 50 STARTUPS & BOSTON HOUSING
+//  DATA DEFINITIONS: KING COUNTY, 50 STARTUPS & BOSTON HOUSING
 // ══════════════════════════════════════════════════════════
+
+const KC_HOUSING_DATA = (typeof KC_HOUSING_RAW !== 'undefined') ? KC_HOUSING_RAW : null;
 
 const STARTUPS_DATA = {
   id: "50_startups",
@@ -966,6 +1149,8 @@ const BOSTON_DATA = {
   }
 };
 
+const KC_HOUSING_DATA = (typeof KC_HOUSING_RAW !== "undefined") ? KC_HOUSING_RAW : null;
+
 const COLORS = {
   "RFE":           "#0cb8b6",
   "LassoCV":       "#4f8ef7",
@@ -1184,7 +1369,11 @@ function onProblemSelectChange(val) {
 
   if (alertBox) alertBox.style.display = "none";
 
-  if (val === "50_startups") {
+  if (val === "kc_housing") {
+    currentBadge.textContent = "Problem: King County Housing";
+    customPanel.style.display = "none";
+    applyDataset(KC_HOUSING_DATA, "kc_housing");
+  } else if (val === "50_startups") {
     currentBadge.textContent = "Problem: 50 Startups";
     customPanel.style.display = "none";
     applyDataset(STARTUPS_DATA, "50_startups");
@@ -1201,6 +1390,41 @@ function onProblemSelectChange(val) {
       document.getElementById("csvUrlInput").focus();
     }
   }
+}
+
+function loadCustomCsvFromFile(file) {
+  if (!file) return;
+  const alertBox = document.getElementById("datasetAlertBox");
+  if (alertBox) alertBox.style.display = "none";
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const text = e.target.result;
+      const parsed = parseCSV(text);
+      if (parsed.rows.length < 3) throw new Error("The CSV file must contain at least 3 data rows for regression analysis.");
+      if (parsed.numericCols.length === 0) throw new Error("No numeric columns detected in CSV. Multiple Linear Regression requires numeric variables.");
+      if (parsed.headers.length < 2) throw new Error("The CSV file must have at least 2 columns (features and target).");
+
+      rawCustomData = parsed;
+      const targetSelect = document.getElementById("customTargetSelect");
+      targetSelect.innerHTML = "";
+      parsed.numericCols.forEach((col, idx) => {
+        const opt = document.createElement("option");
+        opt.value = col;
+        opt.textContent = col;
+        if (idx === parsed.numericCols.length - 1) opt.selected = true;
+        targetSelect.appendChild(opt);
+      });
+      renderFeatureCheckboxes();
+      document.getElementById("problemSelect").value = "custom_url";
+      document.getElementById("currentProblemBadge").textContent = `File: ${file.name}`;
+      document.getElementById("customConfigPanel").style.display = "block";
+      runCustomRegression();
+    } catch(err) {
+      showError(`Failed to parse uploaded CSV: ${err.message}`);
+    }
+  };
+  reader.readAsText(file);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1602,6 +1826,98 @@ function applyDataset(data, mode) {
     </div>
   `).join("");
 
+  // Handle King County specific sections & UI
+  const vizSec = document.getElementById("exploratoryVizSection");
+  const colBox = document.getElementById("collinearityAlertBox");
+  const whyCard = document.getElementById("bizWhyMlCard");
+  const modeSec = document.getElementById("kcModelingModesSection");
+  const assSec = document.getElementById("assumptionsDashboard");
+  const resImg = document.getElementById("residualsVsFittedImg");
+  const qqImg = document.getElementById("qqPlotImg");
+
+  if (mode === "kc_housing") {
+    if (vizSec) vizSec.style.display = "block";
+    if (colBox) colBox.style.display = "block";
+    if (whyCard) whyCard.style.display = "block";
+    if (modeSec) modeSec.style.display = "block";
+    if (assSec) assSec.style.display = "block";
+    if (resImg) resImg.src = "kc_house_outputs/kc_residuals_vs_fitted.png";
+    if (qqImg) qqImg.src = "kc_house_outputs/kc_qq_plot.png";
+
+    // Populate King County Mode A features dropdown
+    const featSelect = document.getElementById("simpleFeatureSelect");
+    if (featSelect && data.modelA && data.modelA.simpleModels) {
+      featSelect.innerHTML = "";
+      Object.keys(data.modelA.simpleModels).forEach(f => {
+        const opt = document.createElement("option");
+        opt.value = f;
+        opt.textContent = `${f} (R² = ${data.modelA.simpleModels[f].r2.toFixed(3)})`;
+        if (f === data.modelA.bestFeature) opt.selected = true;
+        featSelect.appendChild(opt);
+      });
+      updateSimpleLinearModel(data.modelA.bestFeature);
+    }
+
+    // Populate Mode B standardized importance
+    const impGrid = document.getElementById("featureImportanceGrid");
+    if (impGrid && data.modelB && data.modelB.std_coefs) {
+      impGrid.innerHTML = "";
+      const sortedStd = Object.entries(data.modelB.std_coefs).sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
+      sortedStd.forEach(([f, val], idx) => {
+        const pct = Math.min(100, Math.round((Math.abs(val) / Math.abs(sortedStd[0][1])) * 100));
+        const isPos = val >= 0;
+        const div = document.createElement("div");
+        div.style.background = "var(--bg)";
+        div.style.padding = "8px 12px";
+        div.style.borderRadius = "6px";
+        div.style.border = "1px solid var(--border)";
+        div.innerHTML = `
+          <div style="display:flex; justify-content:space-between; font-size:12.5px; font-weight:600;">
+            <span>${idx+1}. ${f}</span>
+            <span style="color:${isPos ? 'var(--teal-dark)' : '#dc2626'}">${isPos ? '+' : ''}${val.toFixed(3)}</span>
+          </div>
+          <div class="importance-bar-container">
+            <div class="importance-bar" style="width:${pct}%; background:${isPos ? 'var(--teal)' : '#f87171'};"></div>
+            <span style="font-size:10.5px; color:var(--muted);">${pct}%</span>
+          </div>
+        `;
+        impGrid.appendChild(div);
+      });
+    }
+
+    // Populate Mode C feature selection display
+    updateFeatureSelectionDisplay("RFECV (5-Fold CV)");
+
+    // Populate 5 Major Assumption Tests
+    const assBody = document.getElementById("assumptionTableBody");
+    if (assBody && data.assumptions) {
+      assBody.innerHTML = "";
+      data.assumptions.forEach(a => {
+        const tr = document.createElement("tr");
+        let badgeCls = "assumption-badge-pass";
+        if (a.status.includes("Reject") || a.status.includes("Heteroscedasticity")) badgeCls = "assumption-badge-warning";
+        tr.innerHTML = `
+          <td><strong>${a.assumption}</strong></td>
+          <td><span class="feat-tag" style="background:#e0f2fe; color:#0369a1;">${a.test_method}</span></td>
+          <td><code>${a.test_statistic}</code></td>
+          <td><code>${a.p_value}</code></td>
+          <td><span class="${badgeCls}">${a.status}</span><div style="font-size:12px; margin-top:4px; color:var(--text); line-height:1.5;">${a.interpretation}</div></td>
+          <td style="font-size:12px; color:#475569; line-height:1.5;">${a.action}</td>
+        `;
+        assBody.appendChild(tr);
+      });
+    }
+
+  } else {
+    if (vizSec) vizSec.style.display = "none";
+    if (colBox) colBox.style.display = "none";
+    if (whyCard) whyCard.style.display = "none";
+    if (modeSec) modeSec.style.display = "none";
+    if (assSec) assSec.style.display = "none";
+    if (resImg) resImg.src = "crisp_dm_outputs/residuals_vs_fitted.png";
+    if (qqImg) qqImg.src = "crisp_dm_outputs/qq_plot.png";
+  }
+
   // 8. Predictor Configuration
   setupPredictor(data, mode);
 }
@@ -1615,8 +1931,113 @@ function setupPredictor(data, mode) {
   const descEl = document.getElementById("predictorDescEl");
   const presetsEl = document.getElementById("predictorPresetsContainer");
   const inputsEl = document.getElementById("predictorInputsContainer");
+  const dlLink = document.getElementById("modelArtifactDownloadLink");
 
-  if (mode === "50_startups") {
+  if (mode === "kc_housing") {
+    titleEl.textContent = "Interactive King County House Price Predictor (房價即時預測模擬器)";
+    descEl.textContent = "調整下方房屋特徵滑桿或點選預設代表性房屋情境，依據 16 特徵基準 OLS 多元線性迴歸模型即時計算預測房價 (USD) 與特徵邊際貢獻金額。";
+    presetsEl.innerHTML = `
+      <button type="button" class="preset-btn" onclick="applyPresetKcHousing('median')">🏡 King County 中位數住宅 ($450k / 3房 / 2衛 / 1910 sqft)</button>
+      <button type="button" class="preset-btn" onclick="applyPresetKcHousing('luxury')">💎 Medina / Bellevue 水岸豪宅 ($2.5M+ / 5房 / 4.5衛 / 5500 sqft)</button>
+      <button type="button" class="preset-btn" onclick="applyPresetKcHousing('urban')">🏙️ 西雅圖市區別墅 ($680k / 3房 / 2.5衛 / 1500 sqft)</button>
+      <button type="button" class="preset-btn" onclick="applyPresetKcHousing('starter')">🌲 南郡經濟首購屋 ($280k / 2房 / 1衛 / 1050 sqft)</button>
+    `;
+    inputsEl.innerHTML = `
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="input-group">
+          <div class="input-label-row"><span>🏠 居住坪數 sqft_living</span><span class="input-value-badge" id="kcVal_sqft_living">1,910 sqft</span></div>
+          <input type="range" id="kcSlider_sqft_living" class="range-slider" min="500" max="8000" step="50" value="1910" oninput="syncInputsKcHousing('sqft_living', this.value)"/>
+          <input type="number" id="kcNum_sqft_living" class="number-input" style="margin-top:4px;" min="300" max="14000" step="50" value="1910" oninput="syncInputsKcHousing('sqft_living', this.value)"/>
+        </div>
+        <div class="input-group">
+          <div class="input-label-row"><span>⭐ 建築等級 grade (1-13)</span><span class="input-value-badge" id="kcVal_grade">7</span></div>
+          <input type="range" id="kcSlider_grade" class="range-slider" min="3" max="13" step="1" value="7" oninput="syncInputsKcHousing('grade', this.value)"/>
+          <input type="number" id="kcNum_grade" class="number-input" style="margin-top:4px;" min="1" max="13" step="1" value="7" oninput="syncInputsKcHousing('grade', this.value)"/>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="input-group">
+          <div class="input-label-row"><span>🛏️ 臥室數 bedrooms</span><span class="input-value-badge" id="kcVal_bedrooms">3 房</span></div>
+          <input type="range" id="kcSlider_bedrooms" class="range-slider" min="1" max="8" step="1" value="3" oninput="syncInputsKcHousing('bedrooms', this.value)"/>
+          <input type="number" id="kcNum_bedrooms" class="number-input" style="margin-top:4px;" min="1" max="10" step="1" value="3" oninput="syncInputsKcHousing('bedrooms', this.value)"/>
+        </div>
+        <div class="input-group">
+          <div class="input-label-row"><span>🛁 衛浴數 bathrooms</span><span class="input-value-badge" id="kcVal_bathrooms">2.0 衛</span></div>
+          <input type="range" id="kcSlider_bathrooms" class="range-slider" min="1" max="6" step="0.25" value="2.0" oninput="syncInputsKcHousing('bathrooms', this.value)"/>
+          <input type="number" id="kcNum_bathrooms" class="number-input" style="margin-top:4px;" min="0.5" max="8" step="0.25" value="2.0" oninput="syncInputsKcHousing('bathrooms', this.value)"/>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="input-group">
+          <div class="input-label-row"><span>📐 地坪面積 sqft_lot</span><span class="input-value-badge" id="kcVal_sqft_lot">7,500 sqft</span></div>
+          <input type="range" id="kcSlider_sqft_lot" class="range-slider" min="1000" max="50000" step="500" value="7500" oninput="syncInputsKcHousing('sqft_lot', this.value)"/>
+          <input type="number" id="kcNum_sqft_lot" class="number-input" style="margin-top:4px;" min="500" max="200000" step="500" value="7500" oninput="syncInputsKcHousing('sqft_lot', this.value)"/>
+        </div>
+        <div class="input-group">
+          <div class="input-label-row"><span>🏢 樓層數 floors</span><span class="input-value-badge" id="kcVal_floors">1.5 樓</span></div>
+          <input type="range" id="kcSlider_floors" class="range-slider" min="1" max="3.5" step="0.5" value="1.5" oninput="syncInputsKcHousing('floors', this.value)"/>
+          <input type="number" id="kcNum_floors" class="number-input" style="margin-top:4px;" min="1" max="3.5" step="0.5" value="1.5" oninput="syncInputsKcHousing('floors', this.value)"/>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="input-group">
+          <div class="input-label-row"><span>🌊 水岸景觀 waterfront</span><span class="input-value-badge" id="kcVal_waterfront">否 (0)</span></div>
+          <select id="kcSelect_waterfront" class="select-input" onchange="syncInputsKcHousing('waterfront', this.value)">
+            <option value="0" selected>無水岸景觀 (0)</option>
+            <option value="1">具備第一線水岸景觀 (1, 溢價 +$578k)</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <div class="input-label-row"><span>👀 景觀評級 view (0-4)</span><span class="input-value-badge" id="kcVal_view">0 (一般)</span></div>
+          <input type="range" id="kcSlider_view" class="range-slider" min="0" max="4" step="1" value="0" oninput="syncInputsKcHousing('view', this.value)"/>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="input-group">
+          <div class="input-label-row"><span>🔨 屋況評級 condition (1-5)</span><span class="input-value-badge" id="kcVal_condition">3 (普通)</span></div>
+          <input type="range" id="kcSlider_condition" class="range-slider" min="1" max="5" step="1" value="3" oninput="syncInputsKcHousing('condition', this.value)"/>
+        </div>
+        <div class="input-group">
+          <div class="input-label-row"><span>🏡 地上坪數 sqft_above</span><span class="input-value-badge" id="kcVal_sqft_above">1,560 sqft</span></div>
+          <input type="range" id="kcSlider_sqft_above" class="range-slider" min="500" max="7000" step="50" value="1560" oninput="syncInputsKcHousing('sqft_above', this.value)"/>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="input-group">
+          <div class="input-label-row"><span>📅 建造年份 yr_built</span><span class="input-value-badge" id="kcVal_yr_built">1975 年</span></div>
+          <input type="range" id="kcSlider_yr_built" class="range-slider" min="1900" max="2015" step="1" value="1975" oninput="syncInputsKcHousing('yr_built', this.value)"/>
+        </div>
+        <div class="input-group">
+          <div class="input-label-row"><span>✨ 翻修年份 yr_renovated</span><span class="input-value-badge" id="kcVal_yr_renovated">無 (0)</span></div>
+          <input type="range" id="kcSlider_yr_renovated" class="range-slider" min="0" max="2015" step="1" value="0" oninput="syncInputsKcHousing('yr_renovated', this.value)"/>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="input-group">
+          <div class="input-label-row"><span>📍 緯度 lat</span><span class="input-value-badge" id="kcVal_lat">47.5600</span></div>
+          <input type="range" id="kcSlider_lat" class="range-slider" min="47.15" max="47.78" step="0.005" value="47.56" oninput="syncInputsKcHousing('lat', this.value)"/>
+        </div>
+        <div class="input-group">
+          <div class="input-label-row"><span>📍 經度 long</span><span class="input-value-badge" id="kcVal_long">-122.2300</span></div>
+          <input type="range" id="kcSlider_long" class="range-slider" min="-122.52" max="-121.31" step="0.005" value="-122.23" oninput="syncInputsKcHousing('long', this.value)"/>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="input-group">
+          <div class="input-label-row"><span>🏘️ 鄰舍平均面積 sqft_living15</span><span class="input-value-badge" id="kcVal_sqft_living15">1,840 sqft</span></div>
+          <input type="range" id="kcSlider_sqft_living15" class="range-slider" min="500" max="6000" step="50" value="1840" oninput="syncInputsKcHousing('sqft_living15', this.value)"/>
+        </div>
+        <div class="input-group">
+          <div class="input-label-row"><span>🌳 鄰舍平均地坪 sqft_lot15</span><span class="input-value-badge" id="kcVal_sqft_lot15">7,620 sqft</span></div>
+          <input type="range" id="kcSlider_sqft_lot15" class="range-slider" min="1000" max="50000" step="200" value="7620" oninput="syncInputsKcHousing('sqft_lot15', this.value)"/>
+        </div>
+      </div>
+    `;
+    if (dlLink) dlLink.href = "kc_house_outputs/kc_house_model.joblib";
+    calcPredictionKcHousing();
+
+  } else if (mode === "50_startups") {
+    if (dlLink) dlLink.href = "crisp_dm_outputs/startup_profit_model.joblib";
     titleEl.textContent = "Interactive Profit Predictor (Live Simulation)";
     descEl.textContent = "Adjust expenditure parameters or click a preset scenario to compute predicted startup profit in real-time using our winning 3-feature OLS regression model.";
     presetsEl.innerHTML = `
@@ -1826,6 +2247,228 @@ function applyPresetBoston(rm, lstat, ptratio, dis, nox) {
   document.getElementById('noxSlider').value = nox;
   document.getElementById('noxValDisplay').textContent = nox.toFixed(2) + " ppm";
   calcPredictionBoston();
+}
+
+// ── Predictor Logic for King County Housing ──
+function syncInputsKcHousing(field, val) {
+  const num = parseFloat(val);
+  const slider = document.getElementById(`kcSlider_${field}`);
+  const numInput = document.getElementById(`kcNum_${field}`);
+  const display = document.getElementById(`kcVal_${field}`);
+  const select = document.getElementById(`kcSelect_${field}`);
+
+  if (slider && slider.value != val) slider.value = val;
+  if (numInput && numInput.value != val) numInput.value = val;
+  if (select && select.value != val) select.value = val;
+
+  if (display) {
+    if (field === 'sqft_living' || field === 'sqft_above' || field === 'sqft_living15') {
+      display.textContent = Math.round(num).toLocaleString('en') + ' sqft';
+    } else if (field === 'sqft_lot' || field === 'sqft_lot15') {
+      display.textContent = Math.round(num).toLocaleString('en') + ' sqft';
+    } else if (field === 'bedrooms') {
+      display.textContent = num + ' 房';
+    } else if (field === 'bathrooms') {
+      display.textContent = num.toFixed(2) + ' 衛';
+    } else if (field === 'floors') {
+      display.textContent = num.toFixed(1) + ' 樓';
+    } else if (field === 'waterfront') {
+      display.textContent = num == 1 ? '第一線水岸 (1)' : '否 (0)';
+    } else if (field === 'view') {
+      display.textContent = `${num} (${num == 0 ? '一般' : num == 4 ? '頂級' : '景觀'})`;
+    } else if (field === 'condition') {
+      display.textContent = `${num} (${num <= 2 ? '待修' : num == 3 ? '普通' : '優質'})`;
+    } else if (field === 'grade') {
+      display.textContent = `${num} (${num <= 6 ? '簡約' : num <= 8 ? '中等' : num <= 10 ? '精緻' : '頂級豪邸'})`;
+    } else if (field === 'yr_built') {
+      display.textContent = Math.round(num) + ' 年';
+    } else if (field === 'yr_renovated') {
+      display.textContent = num > 0 ? Math.round(num) + ' 年' : '無 (0)';
+    } else if (field === 'lat' || field === 'long') {
+      display.textContent = num.toFixed(4);
+    } else {
+      display.textContent = val;
+    }
+  }
+
+  calcPredictionKcHousing();
+}
+
+function calcPredictionKcHousing() {
+  if (!KC_HOUSING_DATA || !KC_HOUSING_DATA.modelB) return;
+  const p = KC_HOUSING_DATA.modelB;
+  const coefs = p.coefs;
+  const intercept = p.intercept;
+
+  const vals = {
+    bedrooms: parseFloat(document.getElementById('kcSlider_bedrooms')?.value) || 3,
+    bathrooms: parseFloat(document.getElementById('kcSlider_bathrooms')?.value) || 2.0,
+    sqft_living: parseFloat(document.getElementById('kcSlider_sqft_living')?.value) || 1910,
+    sqft_lot: parseFloat(document.getElementById('kcSlider_sqft_lot')?.value) || 7500,
+    floors: parseFloat(document.getElementById('kcSlider_floors')?.value) || 1.5,
+    waterfront: parseFloat(document.getElementById('kcSelect_waterfront')?.value ?? document.getElementById('kcSlider_waterfront')?.value) || 0,
+    view: parseFloat(document.getElementById('kcSlider_view')?.value) || 0,
+    condition: parseFloat(document.getElementById('kcSlider_condition')?.value) || 3,
+    grade: parseFloat(document.getElementById('kcSlider_grade')?.value) || 7,
+    sqft_above: parseFloat(document.getElementById('kcSlider_sqft_above')?.value) || 1560,
+    yr_built: parseFloat(document.getElementById('kcSlider_yr_built')?.value) || 1975,
+    yr_renovated: parseFloat(document.getElementById('kcSlider_yr_renovated')?.value) || 0,
+    lat: parseFloat(document.getElementById('kcSlider_lat')?.value) || 47.56,
+    long: parseFloat(document.getElementById('kcSlider_long')?.value) || -122.23,
+    sqft_living15: parseFloat(document.getElementById('kcSlider_sqft_living15')?.value) || 1840,
+    sqft_lot15: parseFloat(document.getElementById('kcSlider_sqft_lot15')?.value) || 7620
+  };
+
+  let totalPred = intercept;
+  for (const f of p.features) {
+    if (coefs[f] !== undefined && vals[f] !== undefined) {
+      totalPred += coefs[f] * vals[f];
+    }
+  }
+
+  const predClamped = Math.max(50000, totalPred);
+  const displayEl = document.getElementById('predictedProfitDisplay');
+  if (displayEl) {
+    displayEl.textContent = "$" + Math.round(predClamped).toLocaleString("en") + " USD";
+  }
+
+  const gradeImpact = vals.grade * coefs.grade;
+  const livingImpact = vals.sqft_living * coefs.sqft_living;
+  const ageImpact = vals.yr_built * coefs.yr_built;
+
+  const bRD = document.getElementById('breakdownRD');
+  const bMkt = document.getElementById('breakdownMkt');
+  const bState = document.getElementById('breakdownState');
+
+  if (bRD) bRD.textContent = "+$" + Math.round(gradeImpact).toLocaleString("en") + ` (等級 ${vals.grade})`;
+  if (bMkt) bMkt.textContent = "+$" + Math.round(livingImpact).toLocaleString("en") + ` (${vals.sqft_living} sqft)`;
+  if (bState) bState.textContent = (ageImpact >= 0 ? "+$" : "-$") + Math.round(Math.abs(ageImpact)).toLocaleString("en") + ` (年份影響)`;
+}
+
+function applyPresetKcHousing(scenario) {
+  const presets = {
+    median: {
+      bedrooms: 3, bathrooms: 2.0, sqft_living: 1910, sqft_lot: 7500, floors: 1.5,
+      waterfront: 0, view: 0, condition: 3, grade: 7, sqft_above: 1560,
+      yr_built: 1975, yr_renovated: 0, lat: 47.5600, long: -122.2300,
+      sqft_living15: 1840, sqft_lot15: 7620
+    },
+    luxury: {
+      bedrooms: 5, bathrooms: 4.5, sqft_living: 5500, sqft_lot: 22000, floors: 2.0,
+      waterfront: 1, view: 4, condition: 4, grade: 11, sqft_above: 4200,
+      yr_built: 2008, yr_renovated: 0, lat: 47.6200, long: -122.2200,
+      sqft_living15: 4800, sqft_lot15: 20000
+    },
+    urban: {
+      bedrooms: 3, bathrooms: 2.5, sqft_living: 1500, sqft_lot: 2500, floors: 3.0,
+      waterfront: 0, view: 1, condition: 4, grade: 8, sqft_above: 1500,
+      yr_built: 2012, yr_renovated: 0, lat: 47.6600, long: -122.3400,
+      sqft_living15: 1450, sqft_lot15: 2800
+    },
+    starter: {
+      bedrooms: 2, bathrooms: 1.0, sqft_living: 1050, sqft_lot: 6000, floors: 1.0,
+      waterfront: 0, view: 0, condition: 3, grade: 6, sqft_above: 1050,
+      yr_built: 1960, yr_renovated: 0, lat: 47.3500, long: -122.2800,
+      sqft_living15: 1150, sqft_lot15: 6200
+    }
+  };
+
+  const p = presets[scenario] || presets.median;
+  Object.keys(p).forEach(f => {
+    syncInputsKcHousing(f, p[f]);
+  });
+}
+
+// ── Regression Modes & Feature Selection Handlers ──
+function switchRegressionMode(mode) {
+  const btnA = document.getElementById('btnModeA');
+  const btnB = document.getElementById('btnModeB');
+  const btnC = document.getElementById('btnModeC');
+  const panelA = document.getElementById('modeAPanel');
+  const panelB = document.getElementById('modeBPanel');
+  const panelC = document.getElementById('modeCPanel');
+
+  if (btnA) btnA.classList.remove('active');
+  if (btnB) btnB.classList.remove('active');
+  if (btnC) btnC.classList.remove('active');
+
+  if (panelA) panelA.style.display = (mode === 'A') ? 'block' : 'none';
+  if (panelB) panelB.style.display = (mode === 'B') ? 'block' : 'none';
+  if (panelC) panelC.style.display = (mode === 'C') ? 'block' : 'none';
+
+  if (mode === 'A' && btnA) btnA.classList.add('active');
+  if (mode === 'B' && btnB) btnB.classList.add('active');
+  if (mode === 'C' && btnC) btnC.classList.add('active');
+}
+
+function updateSimpleLinearModel(feat) {
+  if (!KC_HOUSING_DATA || !KC_HOUSING_DATA.modelA || !KC_HOUSING_DATA.modelA.simpleModels) return;
+  const m = KC_HOUSING_DATA.modelA.simpleModels[feat];
+  if (!m) return;
+
+  const mathEl = document.getElementById('simpleFormulaMath');
+  const noteEl = document.getElementById('simpleFormulaNote');
+  const rmseEl = document.getElementById('simpleRmse');
+  const r2El = document.getElementById('simpleR2');
+  const maeEl = document.getElementById('simpleMae');
+  const adjR2El = document.getElementById('simpleAdjR2');
+
+  const sign = m.coef >= 0 ? '+' : '-';
+  if (mathEl) {
+    mathEl.innerHTML = `<span class="var-y">Price ($)</span> = <span class="var-const">${m.intercept.toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2})}</span> ${sign} <span class="var-x1">${Math.abs(m.coef).toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2})}</span> × (${feat})`;
+  }
+  if (noteEl) {
+    noteEl.innerHTML = `* 當前選擇特徵: <strong>${feat}</strong>，斜率係數 β = ${m.coef.toFixed(2)}，判定係數 R² = ${m.r2.toFixed(4)}。`;
+  }
+  if (rmseEl) rmseEl.textContent = '$' + Math.round(m.rmse).toLocaleString('en');
+  if (r2El) r2El.textContent = m.r2.toFixed(4);
+  if (maeEl) maeEl.textContent = '$' + Math.round(m.mae).toLocaleString('en');
+  if (adjR2El) adjR2El.textContent = m.adj_r2.toFixed(4);
+}
+
+function updateFeatureSelectionDisplay(methodName) {
+  if (!KC_HOUSING_DATA || !KC_HOUSING_DATA.modelC) return;
+  let methodData = KC_HOUSING_DATA.modelC[methodName];
+  if (!methodData) {
+    const matchKey = Object.keys(KC_HOUSING_DATA.modelC).find(k => k.includes(methodName) || methodName.includes(k));
+    if (matchKey) methodData = KC_HOUSING_DATA.modelC[matchKey];
+  }
+  if (!methodData) return;
+
+  const box = document.getElementById('featureSelectionDetailsBox');
+  if (!box) return;
+
+  const baselineRmse = 214472.76;
+  const diffRmse = methodData.rmse - baselineRmse;
+  const diffSign = diffRmse >= 0 ? "+" : "-";
+
+  box.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <h4 style="margin:0; font-size:15px; color:#0f172a;">${methodData.name}</h4>
+      <span class="badge badge-teal">保留特徵數: ${methodData.features_count} / 16</span>
+    </div>
+    <div style="margin-top:12px;">
+      <strong style="font-size:13px; color:#0f766e;">✅ 保留特徵 (${methodData.features.length} 項):</strong>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+        ${methodData.features.map(f => `<span class="badge badge-teal">${f}</span>`).join('')}
+      </div>
+    </div>
+    <div style="margin-top:10px;">
+      <strong style="font-size:13px; color:#dc2626;">❌ 剔除特徵 (${methodData.removed.length} 項):</strong>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+        ${methodData.removed.length > 0 ? methodData.removed.map(f => `<span class="badge badge-neutral" style="text-decoration:line-through; opacity:0.75;">${f}</span>`).join('') : '<span style="font-size:12px; color:var(--muted);">(無剔除，保留全特徵)</span>'}
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:14px;">
+      <div class="stat-card"><div class="stat-val teal">${methodData.r2.toFixed(4)}</div><div class="stat-lbl">Test R²</div></div>
+      <div class="stat-card"><div class="stat-val">${methodData.adj_r2.toFixed(4)}</div><div class="stat-lbl">Adjusted R²</div></div>
+      <div class="stat-card"><div class="stat-val">$${Math.round(methodData.rmse).toLocaleString('en')}</div><div class="stat-lbl">Test RMSE ($)</div></div>
+      <div class="stat-card"><div class="stat-val">$${Math.round(methodData.cv_rmse).toLocaleString('en')}</div><div class="stat-lbl">5-Fold CV RMSE</div></div>
+    </div>
+    <div style="font-size:12px; color:#475569; margin-top:10px; line-height:1.5;">
+      💡 <strong>篩選分析:</strong> 本方法依據交叉驗證 (CV) 選定 ${methodData.features_count} 個特徵，在未見測試集上 Test RMSE 為 $${Math.round(methodData.rmse).toLocaleString('en')} (相較 16 特徵基準變動: <strong>${diffSign}$${Math.abs(Math.round(diffRmse)).toLocaleString('en')}</strong>)。
+    </div>
+  `;
 }
 
 // ── Predictor Logic for Custom Dataset ──
@@ -2053,8 +2696,16 @@ const residChart = new Chart(document.getElementById("residChart"), {
   }
 });
 
-// Initialise default dataset (50 Startups)
-applyDataset(STARTUPS_DATA, "50_startups");
+// Initialise default dataset (King County Housing if available, else 50 Startups)
+if (typeof KC_HOUSING_DATA !== "undefined" && KC_HOUSING_DATA) {
+  const probSel = document.getElementById("problemSelect");
+  if (probSel) probSel.value = "kc_housing";
+  const badge = document.getElementById("currentProblemBadge");
+  if (badge) badge.textContent = "Problem: King County Housing";
+  applyDataset(KC_HOUSING_DATA, "kc_housing");
+} else {
+  applyDataset(STARTUPS_DATA, "50_startups");
+}
 
 // ══════════════════════════════════════════════════════════
 //  ACTIVE SIDEBAR & NAV SCROLL SPY
